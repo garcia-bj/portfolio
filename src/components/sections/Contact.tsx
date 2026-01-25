@@ -70,21 +70,18 @@ export function Contact() {
 
                     {/* Right Column: Form */}
                     <SectionReveal width="100%" delay={0.4} direction="left">
+                        {/* 
+                          SETUP FORMSPREE:
+                          1. Ve a https://formspree.io y crea cuenta gratis
+                          2. Crea un nuevo formulario
+                          3. Copia el ID (ej: xyzabcd) 
+                          4. Reemplaza YOUR_FORM_ID abajo
+                        */}
                         <form
-                            name="contact"
+                            action="https://formspree.io/f/mojeonpo"
                             method="POST"
-                            data-netlify="true"
-                            netlify-honeypot="bot-field"
-                            action="/gracias"
                             className="space-y-6"
                         >
-                            {/* Hidden field for Netlify */}
-                            <input type="hidden" name="form-name" value="contact" />
-
-                            {/* Honeypot anti-spam (invisible) */}
-                            <p className="hidden">
-                                <label>No llenar: <input name="bot-field" /></label>
-                            </p>
 
                             <div className="space-y-2">
                                 <label htmlFor="nombre" className="text-sm font-bold text-zinc-300">Nombre</label>
