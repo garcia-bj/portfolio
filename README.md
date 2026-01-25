@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Portfolio - Brandon Garcia
 
-## Getting Started
+Portafolio profesional de alto rendimiento para **Full Stack Developer & AI Engineer**.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss)
+![Netlify](https://img.shields.io/badge/Deploy-Netlify-00C7B7?logo=netlify)
+
+## ✨ Características
+
+- 🧠 **Hero Interactivo** - Red neuronal animada con Canvas
+- 💎 **Glassmorphism UI** - Diseño premium con blur y transparencias
+- 🎬 **Scroll Animations** - Animaciones suaves con Framer Motion
+- 📱 **100% Responsive** - Optimizado para todos los dispositivos
+- 🌙 **Dark Theme** - Paleta "Petrol Green" profesional
+- 📧 **Formulario de Contacto** - Integrado con Netlify Forms
+
+## 🛠 Tech Stack
+
+| Categoría | Tecnología |
+|-----------|------------|
+| Framework | Next.js 16 (App Router + Turbopack) |
+| Lenguaje | TypeScript |
+| Estilos | Tailwind CSS v4 |
+| Animaciones | Framer Motion |
+| Iconos | Lucide React, React Icons |
+| Deploy | Netlify |
+
+## 📦 Instalación
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Clonar
+git clone https://github.com/garcia-bj/portafolio.git
+cd portafolio
+
+# Instalar
+pnpm install
+
+# Desarrollo
 pnpm dev
-# or
-bun dev
+
+# Build
+pnpm build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Deploy en Netlify
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El proyecto incluye `netlify.toml` preconfigurado:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Conecta tu repo de GitHub a Netlify
+2. Netlify detectará automáticamente la configuración
+3. El formulario de contacto funcionará automáticamente
 
-## Learn More
+### Configuración del Formulario
 
-To learn more about Next.js, take a look at the following resources:
+1. Ve a **Site settings → Forms** en Netlify
+2. El formulario "contact" aparecerá automáticamente
+3. Configura notificaciones a tu email
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📂 Estructura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/              # Rutas (App Router)
+├── components/       
+│   ├── ui/           # SectionReveal, etc.
+│   ├── sections/     # Hero, Stack, Projects, Experience, Contact
+│   └── layout/       # Navbar, Footer
+└── types/            # TypeScript
+```
 
-## Deploy on Vercel
+## 👤 Autor
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Brandon Garcia** - Full Stack Developer & AI Engineer
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 📍 Cochabamba, Bolivia
+- 📧 garciacussi7@gmail.com
+- 📱 +591 62423272
+
+## 📝 Licencia
+
+MIT License

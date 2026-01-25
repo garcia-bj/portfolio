@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="256" height="256">
+  <defs>
+    <linearGradient id="qdrant-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC244C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect fill="#1a1a2e" width="120" height="120" rx="20"/>
+  <g transform="translate(20,20)">
+    <circle fill="url(#qdrant-grad)" cx="40" cy="40" r="30"/>
+    <circle fill="none" stroke="#ffffff" stroke-width="3" cx="40" cy="40" r="18"/>
+    <circle fill="#ffffff" cx="40" cy="40" r="6"/>
+    <circle fill="#ffffff" cx="40" cy="20" r="4"/>
+    <circle fill="#ffffff" cx="56" cy="50" r="4"/>
+    <circle fill="#ffffff" cx="24" cy="50" r="4"/>
+  </g>
+</svg>

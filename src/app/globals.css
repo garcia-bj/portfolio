@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+@theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-spin-slow: spin 8s linear infinite;
+  --animate-reverse-spin: spin 12s linear infinite reverse;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark Mode Variables - Petrol/AI Green Palette (Darker v2) */
+:root {
+  /* Fondo: #010505 (Deepest Petrol - requested "more dark") */
+  --background: 168 80% 1.5%;
+
+  /* Texto principal: #E6EDF3 (Ice White) */
+  --foreground: 208 30% 93%;
+
+  /* Cards/Background secundario: #061A17 (Dark Petrol) */
+  --card: 169 58% 6%;
+  --card-foreground: 208 30% 93%;
+
+  --popover: 168 69% 3%;
+  --popover-foreground: 208 30% 93%;
+
+  /* Color primario: #0FB9B1 (Verde petróleo) */
+  --primary: 177 85% 39%;
+  --primary-foreground: 168 69% 3%;
+
+  /* Color secundario: #20E3B2 (Verde IA) */
+  --secondary: 165 79% 51%;
+  --secondary-foreground: 168 69% 3%;
+
+  /* Accent uses Secondary */
+  --accent: 165 79% 51%;
+  --accent-foreground: 168 69% 3%;
+
+  /* Texto muted: #7DD3C7 */
+  --muted: 169 58% 6%;
+  --muted-foreground: 172 53% 66%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 169 58% 12%;
+  --input: 169 58% 12%;
+  --ring: 177 85% 39%;
+
+  --radius: 0.75rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
