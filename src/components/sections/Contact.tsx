@@ -4,6 +4,7 @@ import React from 'react';
 import { SiWhatsapp, SiGmail, SiGooglemaps } from 'react-icons/si';
 import { Send } from 'lucide-react';
 import { SectionReveal } from '@/components/ui/SectionReveal';
+import { useForm, ValidationError } from '@formspree/react';
 
 export function Contact() {
     return (
