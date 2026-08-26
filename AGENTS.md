@@ -156,6 +156,8 @@ pestana sin foco. Comprobado en carne propia comparando con animejs.com.
 ## Content & language
 
 - All UI copy, code comments, and commit messages are in Spanish.
+- **Los commits NO llevan trailer `Co-Authored-By`.** Es preferencia explicita
+  del dueno del repo: los commits van solo a su nombre.
 
 ## External integrations (hardcoded)
 
