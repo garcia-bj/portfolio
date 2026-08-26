@@ -51,3 +51,7 @@ next-env.d.ts
 # Python
 __pycache__/
 *.pyc
+
+# Este proyecto usa pnpm: Netlify instala con pnpm-lock.yaml.
+# Un package-lock.json a la vez los desincroniza y rompe el deploy.
+package-lock.json

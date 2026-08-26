@@ -4,7 +4,12 @@ Personal portfolio site for Brandon Garcia (Full Stack Developer & AI Engineer).
 
 ## Commands
 
-- `pnpm dev` / `pnpm build` / `pnpm lint` (README documents `pnpm`; Netlify builds with `npm run build`).
+- `pnpm dev` / `pnpm build` / `pnpm lint`. **Usa pnpm, no npm**: Netlify instala
+  con `pnpm-lock.yaml` y `--frozen-lockfile`. Un `npm install` desincroniza el
+  lockfile y el deploy falla con `ERR_PNPM_OUTDATED_LOCKFILE`. Por eso
+  `package-lock.json` esta en `.gitignore`.
+- El comando de build en `netlify.toml` es `npm run build`, pero eso solo ejecuta
+  el script: las dependencias ya se instalaron con pnpm.
 - No test script and no CI. There is no standalone `typecheck` script — type checking runs inside `next build` (strict TS).
 - Node 20 is required for the Netlify build (pinned in `netlify.toml`).
 
