@@ -4,13 +4,18 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { MotionValue } from 'framer-motion';
+import crate from '@/data/crate-parts.json';
 
 /**
  * La caja de herramientas: se abre con el scroll y expulsa los logos.
  *
- * Misma tecnica que `StackModule3D`: primitivas + aristas sobre un relleno
- * opaco del color del fondo. Cero assets 3D; los unicos ficheros que carga son
- * los SVG que ya vivian en /public/icons.
+ * La geometria NO esta escrita aqui. Sale de `src/data/crate-parts.json`, que
+ * genera `3d/build_toolbox_crate.py` desde Blender. Blender es el taller; el
+ * JSON es la lista de piezas; esto solo la monta. Asi no hay dos fuentes de
+ * verdad que se desincronicen, y pesa 7 KB en vez de los cientos de un .glb.
+ *
+ * Estetica igual que `StackModule3D`: aristas sobre un relleno opaco del color
+ * del fondo, que oculta las lineas de la cara trasera.
  */
 
 /** Solo tecnologias con SVG propio en /public/icons. */
@@ -34,11 +39,6 @@ const TOOLS = [
 const OCCLUDER = '#010505';
 const EDGE = '#5EEAD4';
 const EDGE_THRESHOLD = 20;
-
-// Caja
-const HALF = 1.5;        // media anchura interior
-const WALL = 0.13;
-const HEIGHT = 1.5;
 const LID_LIFT = 1.78;   // radianes que gira la tapa al abrirse
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
@@ -67,16 +67,53 @@ function loadIconTexture(url: string): Promise<THREE.CanvasTexture | null> {
     });
 }
 
-/** Panel recto con relleno opaco + aristas, como el resto de piezas del sitio. */
-function panel(w: number, h: number, d: number) {
-    return new THREE.BoxGeometry(w, h, d);
+type Part = {
+    type: string;
+    pos: number[];
+    group: string;
+    size?: number[];
+    rot?: number[];
+    r?: number;
+    h?: number;
+    axis?: string;
+};
+
+/** Una pieza del JSON -> una geometria ya colocada en su sitio. */
+function partGeometry(part: Part): THREE.BufferGeometry {
+    const [x, y, z] = part.pos;
+
+    if (part.type === 'box') {
+        const [w, h, d] = part.size!;
+        const geometry = new THREE.BoxGeometry(w, h, d);
+        const [rx, ry, rz] = part.rot ?? [0, 0, 0];
+        if (rx) geometry.rotateX(rx);
+        if (ry) geometry.rotateY(ry);
+        if (rz) geometry.rotateZ(rz);
+        return geometry.translate(x, y, z);
+    }
+
+    // Cilindro: en three.js nace sobre el eje Y
+    const geometry = new THREE.CylinderGeometry(part.r, part.r, part.h, 14);
+    if (part.axis === 'x') geometry.rotateZ(Math.PI / 2);
+    if (part.axis === 'z') geometry.rotateX(Math.PI / 2);
+    return geometry.translate(x, y, z);
 }
 
-function lineArt(geometry: THREE.BufferGeometry) {
+/**
+ * Fusiona todas las piezas de un grupo en una sola geometria.
+ *
+ * Sin esto serian 75 draw calls: una por tabla, remache y bisagra.
+ */
+function buildGroup(name: 'body' | 'lid') {
+    const parts = (crate.parts as Part[]).filter((p) => p.group === name);
+    const geometries = parts.map(partGeometry);
+    const merged = mergeGeometries(geometries, false)!;
+    for (const g of geometries) g.dispose();
+
     const group = new THREE.Group();
 
     const fill = new THREE.Mesh(
-        geometry,
+        merged,
         new THREE.MeshBasicMaterial({
             color: OCCLUDER,
             polygonOffset: true,
@@ -86,8 +123,8 @@ function lineArt(geometry: THREE.BufferGeometry) {
     );
 
     const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(geometry, EDGE_THRESHOLD),
-        new THREE.LineBasicMaterial({ color: EDGE, transparent: true, opacity: 0.92 })
+        new THREE.EdgesGeometry(merged, EDGE_THRESHOLD),
+        new THREE.LineBasicMaterial({ color: EDGE, transparent: true, opacity: 0.9 })
     );
 
     group.add(fill, edges);
@@ -106,8 +143,8 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-        camera.position.set(0, 3.4, 11.4);
-        camera.lookAt(0, 1.15, 0);
+        camera.position.set(0, 3.5, 11.6);
+        camera.lookAt(0, 1.1, 0);
 
         const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -120,29 +157,15 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
         rig.rotation.y = -0.42;
         scene.add(rig);
 
-        // --- Cuerpo de la caja: cuatro paredes y un suelo, fusionados ---
-        const walls: THREE.BufferGeometry[] = [];
-        const outer = HALF + WALL;
-
-        const front = panel(outer * 2, HEIGHT, WALL).translate(0, HEIGHT / 2, outer - WALL / 2);
-        const back = panel(outer * 2, HEIGHT, WALL).translate(0, HEIGHT / 2, -outer + WALL / 2);
-        const left = panel(WALL, HEIGHT, outer * 2 - WALL * 2).translate(-outer + WALL / 2, HEIGHT / 2, 0);
-        const right = panel(WALL, HEIGHT, outer * 2 - WALL * 2).translate(outer - WALL / 2, HEIGHT / 2, 0);
-        const floor = panel(outer * 2, WALL, outer * 2).translate(0, WALL / 2, 0);
-        walls.push(front, back, left, right, floor);
-
-        const bodyGeometry = mergeGeometries(walls, false)!;
-        for (const w of walls) w.dispose();
-        const body = lineArt(bodyGeometry);
+        const body = buildGroup('body');
         rig.add(body.group);
 
-        // --- Tapa: pivota sobre la bisagra del borde trasero ---
+        // La tapa cuelga de una bisagra en el borde trasero
         const hinge = new THREE.Group();
-        hinge.position.set(0, HEIGHT, -outer);
+        hinge.position.set(0, crate.height, -crate.outer);
         rig.add(hinge);
 
-        const lidGeometry = panel(outer * 2, WALL, outer * 2).translate(0, WALL / 2, outer);
-        const lid = lineArt(lidGeometry);
+        const lid = buildGroup('lid');
         hinge.add(lid.group);
 
         // --- Logos: sprites que salen despedidos de dentro ---
@@ -162,18 +185,18 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
             const angle = Math.PI - t * Math.PI;
             // Tres coronas: dos logos seguidos nunca caen a la misma distancia
             const tier = i % 3;
-            const radius = 3.4 + tier * 0.85;
+            const radius = 3.5 + tier * 0.85;
 
             const from = new THREE.Vector3(
-                (Math.random() - 0.5) * HALF,
-                0.35,
-                (Math.random() - 0.5) * HALF
+                (Math.random() - 0.5) * crate.outer,
+                0.45,
+                (Math.random() - 0.5) * crate.outer
             );
             const to = new THREE.Vector3(
                 Math.cos(angle) * radius * 1.3,
-                0.85 + Math.sin(angle) * radius * 0.62,
+                1.15 + Math.sin(angle) * radius * 0.62,
                 // Delante de la caja: la tapa abierta no los tapa
-                0.7 + tier * 0.45
+                crate.outer * 0.6 + tier * 0.45
             );
 
             const sprite = new THREE.Sprite(
