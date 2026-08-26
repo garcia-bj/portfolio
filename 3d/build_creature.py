@@ -1,83 +1,140 @@
 """
 Esculpe la criatura (diseno original) en Blender y exporta sus puntos.
 
-Bloqueo con metaballs: se funden entre si, asi que un puñado de esferas y
-capsulas da una silueta organica continua en vez de un muñeco de piezas
-pegadas. Es como se bloquea un personaje antes de esculpirlo a mano.
+Dos tecnicas, cada una en lo suyo:
 
-    metaballs  ->  malla evaluada  ->  puntos muestreados  ->  creature.bin
+- **Metaballs** para las masas blandas: cabeza, torso, extremidades, cola. Se
+  funden entre si, asi que dan una silueta organica continua.
+- **Conos** para lo puntiagudo: cuernos, cresta dorsal, garras. Las metaballs
+  no saben hacer puntas; siempre redondean.
+
+Lo puntiagudo es justo lo que hace que se lea como dragon y no como muñeco.
+
+Luego se muestrea la superficie de TODO por area, para que la nube de puntos
+tenga densidad uniforme sin importar de que malla venga cada trozo.
+
+    metaballs + conos  ->  muestreo por area  ->  creature.bin
 
 Uso:
     blender --background --factory-startup --python 3d/build_creature.py -- [--save]
-
-Salida:
-    public/3d/creature.bin     posiciones Int16
-    src/data/creature.json     metadatos
 """
 
 import argparse
 import json
+import math
 import os
+import random
 import struct
 import sys
 
 import bpy
-from mathutils import Vector
+import bmesh
+from mathutils import Vector, Euler
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BIN_PATH = os.path.join(HERE, "..", "public", "3d", "creature.bin")
 META_PATH = os.path.join(HERE, "..", "src", "data", "creature.json")
 BLEND_PATH = os.path.join(HERE, "creature.blend")
 
-SCALE = 3.0            # rango de cuantizacion
-RESOLUTION = 0.045     # cuanto mas bajo, mas detalle en la malla de metaballs
+SCALE = 3.0
+RESOLUTION = 0.04
+THRESHOLD = 0.35     # por debajo del defecto: si no, las masas pequenas no
+                     # llegan a generar superficie y brazos y cola desaparecen
+TARGET_POINTS = 14000
+SEED = 7
 
 # --------------------------------------------------------------------------
-# El bloqueo. (x, y, z, radio). Blender es Z-up; la criatura mira hacia -Y.
+# Masas blandas. (x, y, z, radio). Blender es Z-up; la criatura mira hacia -Y.
 # --------------------------------------------------------------------------
 
 BLOBS = [
-    # Cabeza: grande y redonda, la proporcion que la hace simpatica
-    (0.00, -0.08, 1.78, 0.40),
-    (0.00, -0.34, 1.70, 0.28),   # hocico
-    (0.00, -0.50, 1.65, 0.17),   # punta
+    # Craneo y morro: el morro alargado ya insinua hocico de reptil
+    (0.00, -0.10, 1.80, 0.36),
+    (0.00, -0.32, 1.72, 0.28),
+    (0.00, -0.52, 1.66, 0.20),
+    (0.00, -0.66, 1.62, 0.13),
+    # Mandibula, un poco por debajo
+    (0.00, -0.42, 1.55, 0.17),
 
-    # Cuello: fino a proposito, para que la cabeza se despegue del torso
-    (0.00, 0.02, 1.44, 0.17),
+    # Cuello
+    (0.00, 0.00, 1.48, 0.19),
+    (0.00, 0.04, 1.32, 0.22),
 
-    # Torso: mas estrecho que antes, si no se traga las extremidades
-    (0.00, 0.00, 1.14, 0.34),
-    (0.00, -0.08, 0.88, 0.36),   # barriga, algo adelantada
-    (0.00, 0.02, 0.64, 0.29),
+    # Torso
+    (0.00, 0.00, 1.12, 0.34),
+    (0.00, -0.08, 0.86, 0.36),
+    (0.00, 0.04, 0.62, 0.30),
 
-    # Brazos: mas separados y mas gruesos, o el torso se los come
-    (0.42, -0.04, 1.06, 0.17),
-    (0.62, -0.12, 0.94, 0.15),
-    (0.76, -0.22, 0.82, 0.13),
-    (-0.42, -0.04, 1.06, 0.17),
-    (-0.62, -0.12, 0.94, 0.15),
-    (-0.76, -0.22, 0.82, 0.13),
+    # Brazos: cortos y algo mas gruesos, o el torso se los traga
+    (0.38, -0.06, 1.06, 0.19),
+    (0.58, -0.16, 0.92, 0.16),
+    (0.72, -0.26, 0.80, 0.13),
+    (-0.38, -0.06, 1.06, 0.19),
+    (-0.58, -0.16, 0.92, 0.16),
+    (-0.72, -0.26, 0.80, 0.13),
 
-    # Piernas: gruesas, el peso abajo
-    (0.30, 0.00, 0.46, 0.25),
-    (0.33, -0.04, 0.22, 0.21),
-    (0.35, -0.18, 0.07, 0.18),   # pie
-    (-0.30, 0.00, 0.46, 0.25),
-    (-0.33, -0.04, 0.22, 0.21),
-    (-0.35, -0.18, 0.07, 0.18),
+    # Piernas
+    (0.30, 0.02, 0.48, 0.26),
+    (0.32, -0.02, 0.24, 0.22),
+    (0.34, -0.20, 0.08, 0.19),
+    (-0.30, 0.02, 0.48, 0.26),
+    (-0.32, -0.02, 0.24, 0.22),
+    (-0.34, -0.20, 0.08, 0.19),
 
-    # Cola: sale bien atras y describe una S hasta levantarse
-    (0.00, 0.34, 0.60, 0.22),
-    (0.02, 0.66, 0.44, 0.19),
-    (0.04, 0.96, 0.34, 0.16),
-    (0.06, 1.22, 0.42, 0.13),
-    (0.08, 1.40, 0.62, 0.11),
-    (0.09, 1.50, 0.84, 0.09),    # aqui ira la llama
+    # Cola: el paso debe ser MENOR que el radio, si no salen cuentas de collar
+    (0.00, 0.28, 0.58, 0.25),
+    (0.01, 0.42, 0.50, 0.23),
+    (0.02, 0.56, 0.43, 0.21),
+    (0.03, 0.70, 0.38, 0.19),
+    (0.04, 0.84, 0.35, 0.17),
+    (0.05, 0.98, 0.36, 0.16),
+    (0.06, 1.10, 0.41, 0.14),
+    (0.07, 1.21, 0.49, 0.12),
+    (0.08, 1.30, 0.60, 0.11),
+    (0.09, 1.37, 0.72, 0.09),
 ]
 
-# Donde nace la llama, para el sistema de particulas de la web
-FLAME_ORIGIN = (0.09, 1.53, 0.96)
+FLAME_ORIGIN = (0.09, 1.41, 0.84)
 
+# --------------------------------------------------------------------------
+# Piezas puntiagudas: (base_xyz, alto, radio_base, rotacion_euler)
+# --------------------------------------------------------------------------
+
+def spike_list():
+    spikes = []
+
+    # Cuernos: dos, hacia atras y afuera
+    for sx in (-1, 1):
+        spikes.append(((sx * 0.17, 0.06, 1.98), 0.42, 0.075,
+                       (math.radians(-38), 0.0, math.radians(sx * -22))))
+
+    # Cresta dorsal: se deriva de las propias masas del lomo y la cola, con un
+    # desplazamiento hacia fuera. Colocada a ojo quedaba dentro del cuerpo.
+    spine = [
+        (0.00, 0.04, 1.32, 0.22),   # cuello
+        (0.00, 0.00, 1.12, 0.34),   # torso alto
+        (0.00, 0.04, 0.62, 0.30),   # cadera
+    ] + [b for b in BLOBS if b[1] >= 0.28]   # toda la cola
+
+    for i, (x, y, z, radius) in enumerate(spine):
+        # Hacia arriba y atras, sobre la piel
+        base = (x, y + radius * 0.35, z + radius * 0.88)
+        height = max(0.09, radius * 0.85 - i * 0.012)
+        spikes.append((base, height, height * 0.36,
+                       (math.radians(-32), 0.0, 0.0)))
+
+    # Garras: tres por pie
+    for sx in (-1, 1):
+        for i, dx in enumerate((-0.11, 0.0, 0.11)):
+            spikes.append(((sx * 0.34 + dx, -0.34, 0.06), 0.13, 0.035,
+                           (math.radians(-78), 0.0, 0.0)))
+
+    return spikes
+
+
+# --------------------------------------------------------------------------
+# Blender
+# --------------------------------------------------------------------------
 
 def wipe_scene():
     for obj in list(bpy.data.objects):
@@ -88,13 +145,13 @@ def wipe_scene():
                 block.remove(item)
 
 
-def build_metaball():
-    """Las metaballs se funden: de esferas sueltas sale una silueta continua."""
-    mball = bpy.data.metaballs.new("criatura")
+def build_body():
+    mball = bpy.data.metaballs.new("cuerpo")
     mball.resolution = RESOLUTION
     mball.render_resolution = RESOLUTION
+    mball.threshold = THRESHOLD
 
-    obj = bpy.data.objects.new("criatura", mball)
+    obj = bpy.data.objects.new("cuerpo", mball)
     bpy.context.scene.collection.objects.link(obj)
 
     for x, y, z, radius in BLOBS:
@@ -106,12 +163,69 @@ def build_metaball():
     return obj
 
 
-def evaluate(obj):
-    """Metaballs -> malla real. Sin evaluar el depsgraph no hay vertices."""
-    bpy.context.view_layer.update()
+def cone_mesh(name, height, radius, segments=12):
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bmesh.ops.create_cone(
+        bm, cap_ends=True, cap_tris=True, segments=segments,
+        radius1=radius, radius2=0.0, depth=height,
+    )
+    # El origen al pie del cono, no al centro: asi se apoya en la piel
+    bmesh.ops.translate(bm, verts=bm.verts, vec=(0.0, 0.0, height / 2))
+    bm.to_mesh(mesh)
+    bm.free()
+    return mesh
+
+
+def build_spikes():
+    objects = []
+    for i, (base, height, radius, rot) in enumerate(spike_list()):
+        mesh = cone_mesh(f"punta_{i:02d}", height, radius)
+        obj = bpy.data.objects.new(f"punta_{i:02d}", mesh)
+        obj.location = base
+        obj.rotation_euler = Euler(rot, "XYZ")
+        bpy.context.scene.collection.objects.link(obj)
+        objects.append(obj)
+    return objects
+
+
+def evaluated_mesh(obj):
     deps = bpy.context.evaluated_depsgraph_get()
-    evaluated = obj.evaluated_get(deps)
-    return bpy.data.meshes.new_from_object(evaluated, depsgraph=deps)
+    return bpy.data.meshes.new_from_object(obj.evaluated_get(deps), depsgraph=deps)
+
+
+def sample_surface(meshes_and_matrices, total):
+    """
+    Reparte `total` puntos sobre TODAS las superficies, proporcional al area.
+
+    Sin esto la nube saldria con la densidad de cada malla: mucha en el cuerpo
+    (metaball, miles de caras) y casi ninguna en los cuernos (un cono, 12 caras).
+    """
+    random.seed(SEED)
+    triangles = []
+    total_area = 0.0
+
+    for mesh, matrix in meshes_and_matrices:
+        mesh.calc_loop_triangles()
+        for tri in mesh.loop_triangles:
+            a, b, c = (matrix @ mesh.vertices[i].co for i in tri.vertices)
+            area = (b - a).cross(c - a).length * 0.5
+            if area <= 0:
+                continue
+            triangles.append((a, b, c, area))
+            total_area += area
+
+    points = []
+    for a, b, c, area in triangles:
+        count = area / total_area * total
+        n = int(count) + (1 if random.random() < (count % 1.0) else 0)
+        for _ in range(n):
+            u, v = random.random(), random.random()
+            if u + v > 1.0:
+                u, v = 1.0 - u, 1.0 - v
+            points.append(a + (b - a) * u + (c - a) * v)
+
+    return points
 
 
 def write_binary(points):
@@ -132,12 +246,24 @@ def write_binary(points):
                 "count": len(points),
                 "scale": SCALE,
                 "file": "/3d/creature.bin",
-                # Tambien convertido a Y-up
                 "flame": [FLAME_ORIGIN[0], FLAME_ORIGIN[2], -FLAME_ORIGIN[1]],
             },
             f, separators=(",", ":"),
         )
     return size
+
+
+def build_all():
+    wipe_scene()
+    body = build_body()
+    spikes = build_spikes()
+    bpy.context.view_layer.update()
+
+    surfaces = [(evaluated_mesh(body), body.matrix_world)]
+    for obj in spikes:
+        surfaces.append((evaluated_mesh(obj), obj.matrix_world))
+
+    return sample_surface(surfaces, TARGET_POINTS)
 
 
 def parse_args():
@@ -149,12 +275,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-
-    wipe_scene()
-    obj = build_metaball()
-    mesh = evaluate(obj)
-
-    points = [Vector(v.co) for v in mesh.vertices]
+    points = build_all()
     size = write_binary(points)
     print(f"[ok] {len(points)} puntos -> {round(size / 1024)} KB")
 
