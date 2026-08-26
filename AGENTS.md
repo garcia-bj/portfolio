@@ -175,6 +175,47 @@ Regenera el JSON y el `.blend` a la vez, asi que nunca se separan.
 - Las 145 piezas se fusionan en **seis** mallas (cuerpo y tapa x tres
   materiales) para no acabar con 145 draw calls.
 
+## Pieza 3D: el nucleo de IA (nube de puntos)
+
+Banda entre el manifiesto y el Stack. Una nube de 10.242 puntos que se
+reconfigura entre tres esculturas segun el scroll.
+
+### El caso que NO cabe en una lista de piezas
+
+El cofre son tablas y flejes: se describe con medidas. Esta forma es **ruido
+esculpido**, y no hay manera de reducirla a numeros.
+
+La salida no fue exportar un `.glb`. Fue darse cuenta de que **si lo vamos a
+dibujar como particulas, solo hacen falta las posiciones**: nada de caras,
+normales, UVs ni texturas.
+
+    escultura (Blender)  ->  public/3d/ai-core.bin  ->  THREE.Points
+        3 formas               Int16 XYZ, 180 KB        1 draw call
+
+El mismo modelo como `.glb` con caras y una textura 2K rondaria los 3-8 MB.
+
+### Por que las tres formas morfean
+
+Las tres nacen del **mismo icoesfera subdividido** y solo cambia el
+desplazamiento. Comparten topologia, asi que el punto `i` de una corresponde al
+`i` de las otras: morfear es un `mix()` en el vertex shader entre dos arrays.
+
+### Trampas
+
+- **`bmesh.ops.create_icosphere` numera raro**: los vertices son
+  `10 * 4^(n-1) + 2`. Para 10.242 hace falta `subdivisions=6`, no 5.
+- **El tamano de punto se calcula sobre la distancia a camara.** Con la
+  constante mal (260 en vez de 30) cada punto salia de ~97 px y la nube se
+  saturaba a blanco solido: parecia una mancha, no una escultura.
+- Con `AdditiveBlending` y 10.000 puntos el brillo se acumula rapido. El alfa
+  por punto va al 0.55, no a 1.
+- El binario se carga con `fetch` en runtime, **no** se empaqueta en el bundle
+  de JS.
+
+Para regenerar:
+
+    blender --background --factory-startup --python 3d/build_ai_core.py -- --save
+
 ## Tailwind v4 gotchas
 
 - There is **no `tailwind.config.*`**. Theme is configured entirely in `src/app/globals.css` via the `@theme static` block, which maps `--color-*` tokens to `hsl(var(--...))` CSS variables.
