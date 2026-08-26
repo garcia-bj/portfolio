@@ -4,18 +4,20 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { MotionValue } from 'framer-motion';
-import crate from '@/data/crate-parts.json';
+import chest from '@/data/chest-parts.json';
 
 /**
- * La caja de herramientas: se abre con el scroll y expulsa los logos.
+ * El cofre: se abre con el scroll y expulsa los logos.
  *
- * La geometria NO esta escrita aqui. Sale de `src/data/crate-parts.json`, que
- * genera `3d/build_toolbox_crate.py` desde Blender. Blender es el taller; el
- * JSON es la lista de piezas; esto solo la monta. Asi no hay dos fuentes de
- * verdad que se desincronicen, y pesa 7 KB en vez de los cientos de un .glb.
+ * La geometria NO esta escrita aqui. Sale de `src/data/chest-parts.json`, que
+ * genera `3d/build_treasure_chest.py` desde Blender. Blender es el taller; el
+ * JSON es la lista de piezas (medidas + material); esto solo la monta. Asi no
+ * hay dos fuentes de verdad que se desincronicen, y pesa 16 KB en vez de los
+ * cientos de un .glb.
  *
- * Estetica igual que `StackModule3D`: aristas sobre un relleno opaco del color
- * del fondo, que oculta las lineas de la cara trasera.
+ * A diferencia del resto del sitio, esta pieza SI va con color: madera, hierro
+ * y laton, sombreados con luz real. La arista oscura la mantiene emparentada
+ * con el trazo del modulo del stack.
  */
 
 /** Solo tecnologias con SVG propio en /public/icons. */
@@ -36,10 +38,15 @@ const TOOLS = [
     { name: 'n8n', icon: '/icons/n8n.svg' },
 ];
 
-const OCCLUDER = '#010505';
-const EDGE = '#5EEAD4';
-const EDGE_THRESHOLD = 20;
-const LID_LIFT = 1.78;   // radianes que gira la tapa al abrirse
+const EDGE_THRESHOLD = 25;
+const LID_LIFT = 1.92;   // radianes que gira la tapa al abrirse
+
+/** Los tres materiales del cofre. El borde oscuro le da el aire grafico. */
+const MATERIALS: Record<string, { color: number; edge: number }> = {
+    wood: { color: 0x8a5a2b, edge: 0x2b1a0c },
+    iron: { color: 0x2f3a42, edge: 0x121a20 },
+    brass: { color: 0xc9a227, edge: 0x4d3c08 },
+};
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
@@ -71,6 +78,7 @@ type Part = {
     type: string;
     pos: number[];
     group: string;
+    mat: string;
     size?: number[];
     rot?: number[];
     r?: number;
@@ -100,35 +108,44 @@ function partGeometry(part: Part): THREE.BufferGeometry {
 }
 
 /**
- * Fusiona todas las piezas de un grupo en una sola geometria.
+ * Fusiona las piezas de un grupo que comparten material.
  *
- * Sin esto serian 75 draw calls: una por tabla, remache y bisagra.
+ * Sin esto serian 145 draw calls: una por tabla, fleje y remache. Asi quedan
+ * seis mallas (cuerpo y tapa x madera, hierro y laton).
  */
-function buildGroup(name: 'body' | 'lid') {
-    const parts = (crate.parts as Part[]).filter((p) => p.group === name);
-    const geometries = parts.map(partGeometry);
-    const merged = mergeGeometries(geometries, false)!;
-    for (const g of geometries) g.dispose();
+function buildGroup(group: 'body' | 'lid') {
+    const holder = new THREE.Group();
+    const created: { geometry: THREE.BufferGeometry; material: THREE.Material }[] = [];
 
-    const group = new THREE.Group();
+    for (const [name, tone] of Object.entries(MATERIALS)) {
+        const parts = (chest.parts as Part[]).filter((p) => p.group === group && p.mat === name);
+        if (!parts.length) continue;
 
-    const fill = new THREE.Mesh(
-        merged,
-        new THREE.MeshBasicMaterial({
-            color: OCCLUDER,
+        const geometries = parts.map(partGeometry);
+        const merged = mergeGeometries(geometries, false)!;
+        for (const g of geometries) g.dispose();
+
+        const material = new THREE.MeshLambertMaterial({
+            color: tone.color,
             polygonOffset: true,
             polygonOffsetFactor: 1,
             polygonOffsetUnits: 1,
-        })
-    );
+        });
+        const mesh = new THREE.Mesh(merged, material);
 
-    const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(merged, EDGE_THRESHOLD),
-        new THREE.LineBasicMaterial({ color: EDGE, transparent: true, opacity: 0.9 })
-    );
+        const edgeGeometry = new THREE.EdgesGeometry(merged, EDGE_THRESHOLD);
+        const edgeMaterial = new THREE.LineBasicMaterial({
+            color: tone.edge,
+            transparent: true,
+            opacity: 0.55,
+        });
+        const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
 
-    group.add(fill, edges);
-    return { group, fill, edges };
+        holder.add(mesh, edges);
+        created.push({ geometry: merged, material }, { geometry: edgeGeometry, material: edgeMaterial });
+    }
+
+    return { group: holder, created };
 }
 
 export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
@@ -153,6 +170,15 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
         renderer.domElement.style.height = '100%';
         renderer.domElement.style.display = 'block';
 
+        // MeshLambertMaterial necesita luz: sin esto el cofre saldria negro
+        scene.add(new THREE.AmbientLight(0xffffff, 1.9));
+        const key = new THREE.DirectionalLight(0xffffff, 2.1);
+        key.position.set(-4, 7, 8);
+        scene.add(key);
+        const rim = new THREE.DirectionalLight(0x5eead4, 0.9);
+        rim.position.set(5, 2, -6);
+        scene.add(rim);
+
         const rig = new THREE.Group();
         rig.rotation.y = -0.42;
         scene.add(rig);
@@ -162,7 +188,7 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
 
         // La tapa cuelga de una bisagra en el borde trasero
         const hinge = new THREE.Group();
-        hinge.position.set(0, crate.height, -crate.outer);
+        hinge.position.set(0, chest.height, -chest.halfDepth);
         rig.add(hinge);
 
         const lid = buildGroup('lid');
@@ -188,15 +214,15 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
             const radius = 3.5 + tier * 0.85;
 
             const from = new THREE.Vector3(
-                (Math.random() - 0.5) * crate.outer,
-                0.45,
-                (Math.random() - 0.5) * crate.outer
+                (Math.random() - 0.5) * chest.halfWidth,
+                0.5,
+                (Math.random() - 0.5) * chest.halfDepth
             );
             const to = new THREE.Vector3(
                 Math.cos(angle) * radius * 1.3,
                 1.15 + Math.sin(angle) * radius * 0.62,
                 // Delante de la caja: la tapa abierta no los tapa
-                crate.outer * 0.6 + tier * 0.45
+                chest.halfDepth * 0.7 + tier * 0.45
             );
 
             const sprite = new THREE.Sprite(
@@ -268,11 +294,9 @@ export function ToolboxScene({ progress }: { progress: MotionValue<number> }) {
             cancelAnimationFrame(raf);
             sizeObserver.disconnect();
             visibility.disconnect();
-            for (const piece of [body, lid]) {
-                piece.fill.geometry.dispose();
-                (piece.fill.material as THREE.Material).dispose();
-                piece.edges.geometry.dispose();
-                (piece.edges.material as THREE.Material).dispose();
+            for (const piece of [...body.created, ...lid.created]) {
+                piece.geometry.dispose();
+                piece.material.dispose();
             }
             for (const tool of tools) {
                 tool.sprite.material.map?.dispose();

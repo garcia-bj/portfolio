@@ -140,6 +140,41 @@ Chrome **estrangula `requestAnimationFrame` en pestanas sin foco**. Dos capturas
 identicas separadas por segundos NO prueban que algo este quieto: puede ser la
 pestana sin foco. Comprobado en carne propia comparando con animejs.com.
 
+## Pieza 3D: el cofre de herramientas
+
+Banda entre Experiencia y Contacto. El cofre se abre con el scroll y expulsa
+los logos del stack en abanico.
+
+### El pipeline: Blender -> JSON -> three.js
+
+A diferencia del modulo del stack (donde las medidas estan duplicadas a mano en
+el `.py` y en el `.tsx`), aqui hay **una sola fuente de verdad**:
+
+    3d/build_treasure_chest.py  ->  src/data/chest-parts.json  ->  ToolboxScene.tsx
+       (modela en Blender)            (145 piezas, 16 KB)          (lo monta)
+
+El script escribe la lista de piezas — medidas, posicion, giro y material — y la
+web la lee y reconstruye la geometria. **No hay `.glb`**: un `.glb` guarda la
+malla entera (vertices, caras, normales) y pesaria cientos de KB; el JSON guarda
+solo las medidas y three.js fabrica la malla en el navegador.
+
+Para retocar el cofre se editan las constantes de arriba del script y se corre:
+
+    blender --background --factory-startup --python 3d/build_treasure_chest.py -- --save
+
+Regenera el JSON y el `.blend` a la vez, asi que nunca se separan.
+
+### Trampas del cofre
+
+- **Blender es Z-up y three.js Y-up.** La conversion correcta es
+  `(x, y, z) -> (x, -z, y)`, tambien en los giros. Con `(x, z, y)` se invierte
+  la mano: las duelas de la boveda salian planas, en escalera.
+- **Esta pieza SI lleva color** (madera, hierro, laton), a diferencia del resto
+  del sitio. Usa `MeshLambertMaterial`, que **necesita luces**: sin ellas el
+  cofre sale negro.
+- Las 145 piezas se fusionan en **seis** mallas (cuerpo y tapa x tres
+  materiales) para no acabar con 145 draw calls.
+
 ## Tailwind v4 gotchas
 
 - There is **no `tailwind.config.*`**. Theme is configured entirely in `src/app/globals.css` via the `@theme static` block, which maps `--color-*` tokens to `hsl(var(--...))` CSS variables.
