@@ -47,6 +47,7 @@ LINE_COLOR = (0.35, 0.90, 0.82)   # verde petroleo claro
 LINE_THICKNESS = 1.5
 
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exports")
+BLEND_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stack-module.blend")
 
 
 # --------------------------------------------------------------------------
@@ -358,6 +359,8 @@ def parse_args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     parser = argparse.ArgumentParser()
     parser.add_argument("--test", action="store_true")
+    parser.add_argument("--save", action="store_true",
+                        help="Guarda 3d/stack-module.blend con la geometria y no renderiza")
     parser.add_argument("--transparent", action="store_true",
                         help="RGBA en vez de opaco sobre negro (duplica el peso)")
     parser.add_argument("--quality", type=int, default=80)
@@ -375,6 +378,14 @@ def main():
     build_module(args.frames)          # la animacion siempre se define completa
     setup_camera(args.frames)
     scene = setup_render(frames, res_x, res_y, transparent=args.transparent, quality=args.quality)
+
+    if args.save:
+        # Sin esto el .blend queda como un stub con el cubo por defecto: la
+        # geometria vive en este script y se construia solo en memoria.
+        scene.frame_set(1)
+        bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
+        print(f"[ok] escena guardada en {BLEND_PATH}")
+        return
 
     os.makedirs(OUT_DIR, exist_ok=True)
 

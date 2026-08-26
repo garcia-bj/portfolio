@@ -3,6 +3,7 @@ import { Stats } from '@/components/sections/Stats';
 import { TechStack } from '@/components/sections/Stack';
 import Projects from '@/components/sections/Projects';
 import { Experience } from '@/components/sections/Experience';
+import { Toolbox } from '@/components/sections/Toolbox';
 import { Contact } from '@/components/sections/Contact';
 
 // Cada sección trae sus propias animaciones de scroll; no hace falta envolverlas
@@ -15,6 +16,7 @@ export default function Home() {
       <TechStack />
       <Projects />
       <Experience />
+      <Toolbox />
       <Contact />
     </main>
   );
