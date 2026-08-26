@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
-@theme {
+/* `static`: Tailwind v4 descarta las variables de @theme que no ve usadas y las
+   fuentes se quedaban vacías (--font-sans, --font-mono, --font-display). */
+@theme static {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-syne);
 
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
@@ -37,6 +40,22 @@
 
   --animate-spin-slow: spin 8s linear infinite;
   --animate-reverse-spin: spin 12s linear infinite reverse;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-drift: drift 22s ease-in-out infinite;
+  --animate-scan: scan 3s ease-in-out infinite;
+
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+  @keyframes drift {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    33%      { transform: translate3d(4%, -6%, 0) scale(1.12); }
+    66%      { transform: translate3d(-5%, 4%, 0) scale(0.94); }
+  }
+  @keyframes scan {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    50%      { opacity: 1; transform: translateY(8px); }
+  }
 }
 
 /* Dark Mode Variables - Petrol/AI Green Palette (Darker v2) */
@@ -68,7 +87,7 @@
 
   /* Texto muted: #7DD3C7 */
   --muted: 169 58% 6%;
-  --muted-foreground: 172 53% 66%;
+  --muted-foreground: 172 40% 72%;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
@@ -80,10 +99,114 @@
   --radius: 0.75rem;
 }
 
+html {
+  scroll-behavior: smooth;
+  /* `clip` y no `hidden`: hidden convierte el elemento en contenedor de scroll
+     y rompe el position:sticky de las tarjetas apiladas de Proyectos. */
+  overflow-x: clip;
+}
+
 body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+/* Grano de película sobre toda la página: da textura y quita el look "plano de IA" */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.85);
+  color: hsl(var(--primary-foreground));
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 99px;
+  border: 3px solid hsl(var(--background));
+}
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
+
+/* Accesibilidad: foco visible consistente en toda la página */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* @theme ya genera `font-family` para .font-display; aquí solo el ajuste óptico.
+   Sin font-weight fijo: en Syne el contraste del titular lo marca el peso. */
+@utility font-display {
+  letter-spacing: -0.035em;
+}
+
+/* Tarjeta de cristal (la usaba Experience sin que existiera la clase) */
+@utility glass {
+  background: linear-gradient(
+    145deg,
+    hsl(var(--card) / 0.7),
+    hsl(var(--card) / 0.25)
+  );
+  border: 1px solid hsl(var(--border) / 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Rejilla técnica de fondo */
+@utility grid-lines {
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Etiqueta mono de sección */
+@utility eyebrow {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+}
+
+/* Borde degradado en hover (sin capas extra de markup) */
+@utility ring-glow {
+  box-shadow:
+    0 0 0 1px hsl(var(--primary) / 0.25),
+    0 20px 60px -20px hsl(var(--primary) / 0.35);
+}
+
+/* Gradient shimmer for headline text */
+.text-shimmer {
+  background-size: 200% auto;
+  animation: shimmer 6s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: -200% center; }
+}
+
+/* Respeta prefers-reduced-motion en TODO el sitio, incluido Framer Motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

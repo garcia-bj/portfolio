@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Blender: los .blend se versionan, sus copias de seguridad no
+*.blend1
+*.blend2
+3d/blender_cache/
+
+# Renders intermedios: la copia servida vive en public/3d
+3d/exports/
+
+# Python
+__pycache__/
+*.pyc

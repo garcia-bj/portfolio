@@ -1,88 +1,174 @@
+'use client';
 
-import React from 'react';
-import { ExternalLink, Github, Terminal, ArrowRight } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import { Github, ArrowUpRight } from 'lucide-react';
 import { PROJECTS } from './constants';
 import SpotlightCard from './SpotlightCard';
-import Reveal from './Reveal';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 
-const Projects = () => (
-    <section id="projects" className="py-40 px-8 bg-background">
-        <div className="max-w-7xl mx-auto">
-            <Reveal>
-                <div className="mb-24 text-left">
-                    <h2 className="text-5xl md:text-6xl font-black tracking-tighter mb-4 uppercase text-white leading-none">
-                        Proyectos <span className="text-white/20">Destacados</span>
-                    </h2>
-                    <p className="text-white/40 text-lg max-w-2xl font-medium">
-                        Proyectos que demuestran la capacidad técnica para orquestar infraestructuras complejas y modelos de IA generativa.
-                    </p>
-                </div>
-            </Reveal>
+type Project = (typeof PROJECTS)[number];
 
-            <div className="grid md:grid-cols-3 gap-6">
-                {PROJECTS.map((p, i) => (
-                    <Reveal key={p.id} delay={i * 0.1}>
-                        <SpotlightCard className="flex flex-col h-full group bg-card border-white/5 hover:border-primary/30 transition-all duration-700">
-                            <div className="aspect-[16/11] overflow-hidden relative border-b border-white/5">
-                                <img
-                                    src={p.image}
-                                    className="w-full h-full object-cover grayscale opacity-50 transition-all duration-1000 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110"
-                                    alt={p.title}
+// El apilado sticky solo tiene sentido si la tarjeta cabe en la pantalla
+function useIsDesktop() {
+    const [isDesktop, setIsDesktop] = useState(true);
+    useEffect(() => {
+        const mq = window.matchMedia('(min-width: 768px)');
+        const sync = () => setIsDesktop(mq.matches);
+        sync();
+        mq.addEventListener('change', sync);
+        return () => mq.removeEventListener('change', sync);
+    }, []);
+    return isDesktop;
+}
+
+function ProjectCard({
+    project,
+    index,
+    total,
+    progress,
+}: {
+    project: Project;
+    index: number;
+    total: number;
+    progress: MotionValue<number>;
+}) {
+    const isDesktop = useIsDesktop();
+    // Cada tarjeta se encoge un poco cuando la siguiente se le monta encima
+    const targetScale = 1 - (total - index) * 0.04;
+    const scale = useTransform(progress, [index / total, 1], [1, isDesktop ? targetScale : 1]);
+    const flip = index % 2 === 1;
+
+    return (
+        <div className="flex items-center justify-center px-6 py-6 md:sticky md:top-0 md:h-screen md:py-0 lg:px-10">
+            <motion.div
+                style={{ scale, top: isDesktop ? `${index * 26}px` : 0 }}
+                className="relative w-full max-w-6xl origin-top"
+            >
+                {/* El grid va dentro: SpotlightCard envuelve a sus hijos en un div propio */}
+                <SpotlightCard className="rounded-3xl border-white/10 bg-card/95 backdrop-blur-xl">
+                    <div className="grid md:grid-cols-2">
+                    {/* Imagen */}
+                    <div className={`relative min-h-[220px] overflow-hidden ${flip ? 'md:order-2' : ''}`}>
+                        <img
+                            src={project.image}
+                            alt={project.title}
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full scale-105 object-cover opacity-70 grayscale transition-all duration-700 hover:scale-110 hover:opacity-100 hover:grayscale-0"
+                        />
+                        <div
+                            className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent md:from-transparent md:to-card ${flip ? 'md:bg-gradient-to-l' : 'md:bg-gradient-to-r'
+                                }`}
+                        />
+                        <span className="absolute left-6 top-6 font-display text-6xl font-extrabold leading-none text-foreground/15">
+                            {String(index + 1).padStart(2, '0')}
+                        </span>
+                    </div>
+
+                    {/* Contenido */}
+                    <div className={`flex flex-col p-7 md:p-10 ${flip ? 'md:order-1' : ''}`}>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[10px] uppercase tracking-[0.25em]">
+                            <span className="text-primary">{project.category}</span>
+                            <span className="text-border">|</span>
+                            <span className="text-muted-foreground/60">{project.role}</span>
+                        </div>
+
+                        <h3 className="mt-4 font-display text-3xl font-bold leading-[1.05] text-foreground md:text-4xl">
+                            {project.title}
+                        </h3>
+
+                        <p className="mt-4 text-sm leading-relaxed text-muted-foreground/85">
+                            {project.description}
+                        </p>
+
+                        {project.details && (
+                            <ul className="mt-6 space-y-2.5 border-l border-border/70 pl-5">
+                                {project.details.map((detail) => (
+                                    <li key={detail} className="text-xs leading-relaxed text-muted-foreground/65">
+                                        {detail}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+
+                        {project.tags && (
+                            <div className="mt-6 flex flex-wrap gap-2">
+                                {project.tags.map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="rounded-full border border-border/70 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="mt-auto flex items-center justify-between gap-4 pt-8">
+                            <a
+                                href={project.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group inline-flex cursor-pointer items-center gap-2 border-b border-primary/40 pb-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary transition-colors duration-200 hover:border-primary hover:text-secondary"
+                            >
+                                Ver proyecto
+                                <ArrowUpRight
+                                    size={14}
+                                    className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
-                                <div className="absolute top-6 left-6 px-4 py-1.5 bg-background/80 backdrop-blur-md border border-white/10 text-[8px] font-black uppercase tracking-widest text-primary">
-                                    {p.category}
-                                </div>
-                            </div>
-                            <div className="p-10 flex flex-col flex-1">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex flex-col">
-                                        <div className="flex gap-4 items-center mb-1">
-                                            <Terminal size={12} className="text-secondary" />
-                                            <span className="text-[10px] font-bold text-secondary uppercase tracking-wider">{p.role}</span>
-                                        </div>
-                                    </div>
-                                    <a href={p.link} target="_blank" rel="noopener noreferrer">
-                                        <ExternalLink size={16} className="text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
-                                    </a>
-                                </div>
-                                <h3 className="text-xl font-black mb-4 tracking-tight uppercase text-white group-hover:text-primary transition-colors leading-tight">
-                                    {p.title}
-                                </h3>
-                                <p className="text-white/60 text-xs leading-relaxed mb-6 font-medium">
-                                    {p.description}
-                                </p>
+                            </a>
+                            {project.github && project.github !== '#' && (
+                                <a
+                                    href={project.github}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={`Repositorio de ${project.title}`}
+                                    className="cursor-pointer text-muted-foreground/50 transition-colors duration-200 hover:text-foreground"
+                                >
+                                    <Github size={18} />
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                    </div>
+                </SpotlightCard>
+            </motion.div>
+        </div>
+    );
+}
 
-                                {p.details && (
-                                    <ul className="space-y-3 mb-10 flex-1">
-                                        {p.details.map((detail, idx) => (
-                                            <li key={idx} className="flex gap-3 text-[10px] leading-relaxed text-white/40 group-hover:text-white/60 transition-colors">
-                                                <span className="text-primary mt-1 shrink-0">▹</span>
-                                                {detail}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
+const Projects = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ['start start', 'end end'],
+    });
 
-                                <div className="flex justify-between items-center pt-8 border-t border-white/5">
-                                    <a href={p.link} target="_blank" rel="noopener noreferrer" className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 group-hover:text-white transition-all cursor-pointer flex items-center gap-3">
-                                        View Project <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                                    </a>
-                                    <div className="flex gap-4">
-                                        {p.github && p.github !== '#' && (
-                                            <a href={p.github} target="_blank" rel="noopener noreferrer">
-                                                <Github size={18} className="text-white/20 hover:text-white transition-colors cursor-pointer" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </SpotlightCard>
-                    </Reveal>
+    return (
+        <section id="projects" className="relative py-32">
+            <div className="mx-auto max-w-7xl px-6 lg:px-10">
+                <SectionHeading
+                    eyebrow="Portafolio"
+                    title="Proyectos"
+                    accent="destacados"
+                    description="Infraestructuras complejas y modelos de IA generativa puestos a trabajar para negocios reales."
+                />
+            </div>
+
+            {/* Tarjetas apiladas: cada una se queda fija y la siguiente se le monta encima */}
+            <div ref={containerRef} className="relative mt-24">
+                {PROJECTS.map((project, i) => (
+                    <ProjectCard
+                        key={project.id}
+                        project={project}
+                        index={i}
+                        total={PROJECTS.length}
+                        progress={scrollYProgress}
+                    />
                 ))}
             </div>
-        </div>
-    </section>
-);
+        </section>
+    );
+};
 
 export default Projects;

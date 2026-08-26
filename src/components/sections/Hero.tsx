@@ -1,301 +1,305 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
-import { ArrowRight, Github, Linkedin, FileDown, Terminal, Cpu } from 'lucide-react';
+import { ArrowRight, Github, FileDown, Cpu, Terminal } from 'lucide-react';
+import { Magnetic } from '@/components/ui/Magnetic';
 
-// --- Neural Network Canvas Background ---
+// --- Fondo: red neuronal en canvas ---
 const NeuralNetworkBackground = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Configuration
-        const particleCount = 60; // Adjust for density
+        // Sin animación si el usuario pide menos movimiento
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const particleCount = window.innerWidth < 768 ? 30 : 64;
         const connectionDistance = 150;
         const mouseDistance = 200;
+        const particleColor = 'rgba(15, 185, 177, 0.65)';
 
-        // Colors
-        const particleColor = 'rgba(15, 185, 177, 0.7)'; // Primary Petrol Green (#0FB9B1)
-        const lineColor = 'rgba(32, 227, 178, 0.2)'; // Secondary AI Green (#20E3B2)
-
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        let particles: Particle[] = [];
-        let mouse = { x: 0, y: 0 };
+        let width = 0;
+        let height = 0;
+        let raf = 0;
+        const mouse = { x: -9999, y: -9999 };
 
         class Particle {
-            x: number;
-            y: number;
-            vx: number;
-            vy: number;
-            size: number;
-
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5; // Slow movement
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2 + 1;
-            }
+            x = Math.random() * width;
+            y = Math.random() * height;
+            vx = (Math.random() - 0.5) * 0.45;
+            vy = (Math.random() - 0.5) * 0.45;
+            size = Math.random() * 1.8 + 0.8;
 
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-
-                // Bounce off edges
                 if (this.x < 0 || this.x > width) this.vx *= -1;
                 if (this.y < 0 || this.y > height) this.vy *= -1;
 
-                // Mouse interaction
                 const dx = mouse.x - this.x;
                 const dy = mouse.y - this.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < mouseDistance) {
-                    const forceDirectionX = dx / distance;
-                    const forceDirectionY = dy / distance;
+                const distance = Math.hypot(dx, dy);
+                if (distance < mouseDistance && distance > 0) {
                     const force = (mouseDistance - distance) / mouseDistance;
-                    const directionX = forceDirectionX * force * 0.5;
-                    const directionY = forceDirectionY * force * 0.5;
-
-                    // Gently move away from mouse (repulse)
-                    this.x -= directionX;
-                    this.y -= directionY;
+                    this.x -= (dx / distance) * force * 0.6;
+                    this.y -= (dy / distance) * force * 0.6;
                 }
-            }
-
-            draw() {
-                if (!ctx) return;
-                ctx.fillStyle = particleColor;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
             }
         }
 
-        const init = () => {
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new Particle());
-            }
+        let particles: Particle[] = [];
+
+        const resize = () => {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            particles = Array.from({ length: particleCount }, () => new Particle());
         };
 
         const animate = () => {
-            if (!ctx) return;
             ctx.clearRect(0, 0, width, height);
 
             for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
+                const p = particles[i];
+                p.update();
 
-                // Draw connections
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                ctx.fillStyle = particleColor;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
 
+                // j = i + 1: cada par se dibuja una sola vez
+                for (let j = i + 1; j < particles.length; j++) {
+                    const q = particles[j];
+                    const distance = Math.hypot(p.x - q.x, p.y - q.y);
                     if (distance < connectionDistance) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = lineColor;
+                        // La línea se desvanece con la distancia -> malla más orgánica
+                        const alpha = 0.22 * (1 - distance / connectionDistance);
+                        ctx.strokeStyle = 'rgba(32, 227, 178, ' + alpha + ')';
                         ctx.lineWidth = 1;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(q.x, q.y);
                         ctx.stroke();
                     }
                 }
             }
-            requestAnimationFrame(animate);
-        };
-
-        const handleResize = () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            init();
+            raf = requestAnimationFrame(animate);
         };
 
         const handleMouseMove = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
         };
 
-        window.addEventListener('resize', handleResize);
+        resize();
+        animate();
+        window.addEventListener('resize', resize);
         window.addEventListener('mousemove', handleMouseMove);
 
-        init();
-        animate();
-
         return () => {
-            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(raf);
+            window.removeEventListener('resize', resize);
             window.removeEventListener('mousemove', handleMouseMove);
         };
     }, []);
 
-    return <canvas ref={canvasRef} className="absolute inset-0 z-0 bg-background" />;
+    return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" aria-hidden />;
 };
 
+const fadeUp = {
+    hidden: { opacity: 0, y: 24, filter: 'blur(8px)' },
+    show: { opacity: 1, y: 0, filter: 'blur(0px)' },
+};
 
-// --- Hero Component ---
+const ease = [0.22, 1, 0.36, 1] as const;
+
 const Hero = () => {
+    const { scrollY } = useScroll();
+    const cardY = useTransform(scrollY, [0, 700], [0, 120]);
+    const bgY = useTransform(scrollY, [0, 700], [0, 90]);
+    const contentY = useTransform(scrollY, [0, 700], [0, -40]);
+    const cueOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-            {/* Background Layer */}
-            <NeuralNetworkBackground />
+        <section className="relative flex min-h-screen items-center overflow-hidden">
+            {/* Capa 1: rejilla técnica */}
+            <div className="absolute inset-0 grid-lines [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
 
-            {/* Gradient Overlay for Depth */}
-            <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background z-10 pointer-events-none" />
+            {/* Capa 2: red neuronal */}
+            <motion.div style={{ y: bgY }} className="absolute inset-0 z-0">
+                <NeuralNetworkBackground />
+            </motion.div>
 
-            {/* Content Container */}
-            <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 py-20 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+            {/* Capa 3: auroras a la deriva */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute -left-40 top-1/4 h-[36rem] w-[36rem] rounded-full bg-primary/12 blur-[140px] animate-drift" />
+                <div className="absolute -right-32 bottom-0 h-[30rem] w-[30rem] rounded-full bg-secondary/10 blur-[130px] animate-drift [animation-delay:-8s]" />
+            </div>
 
-                {/* Left: Text Content */}
-                <div className="flex-1 w-full max-w-2xl text-center lg:text-left">
+            {/* Capa 4: viñeta */}
+            <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-background via-transparent to-background" />
 
-                    {/* Badge */}
+            <motion.div
+                style={{ y: contentY }}
+                className="relative z-20 mx-auto grid w-full max-w-7xl items-center gap-16 px-6 pb-24 pt-36 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20 lg:px-10"
+            >
+                {/* Columna izquierda */}
+                <motion.div initial="hidden" animate="show" transition={{ staggerChildren: 0.11 }}>
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-md mb-8"
+                        variants={fadeUp}
+                        transition={{ duration: 0.7, ease }}
+                        className="inline-flex items-center gap-2.5 rounded-full border border-primary/25 bg-primary/[0.06] px-4 py-1.5 backdrop-blur-md"
                     >
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
                         </span>
-                        <span className="text-primary text-xs font-bold tracking-widest uppercase">
-                            Full Stack Developer & IA engineer
-                        </span>
+                        <span className="eyebrow">Disponible para proyectos</span>
                     </motion.div>
 
-                    {/* Headline */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                    <motion.h1
+                        variants={fadeUp}
+                        transition={{ duration: 0.9, ease }}
+                        className="mt-8 font-display text-[clamp(3.25rem,9vw,7rem)] leading-[0.88]"
                     >
-                        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
-                            Hola, soy <br className="hidden lg:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                                Brandon Garcia
-                            </span>
-                        </h1>
+                        <span className="block font-normal text-foreground/40">Brandon</span>
+                        <span className="block bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text font-extrabold text-transparent text-shimmer">
+                            Garcia
+                        </span>
+                    </motion.h1>
+
+                    <motion.div
+                        variants={fadeUp}
+                        transition={{ duration: 0.7, ease }}
+                        className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground/70"
+                    >
+                        <span>Full Stack Developer</span>
+                        <span className="text-primary">/</span>
+                        <span>AI Engineer</span>
+                        <span className="text-primary">/</span>
+                        <span>Bolivia</span>
                     </motion.div>
 
-                    {/* Subheadline */}
                     <motion.p
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="text-lg sm:text-xl text-slate-400 mb-10 leading-relaxed max-w-lg mx-auto lg:mx-0"
+                        variants={fadeUp}
+                        transition={{ duration: 0.7, ease }}
+                        className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground/85"
                     >
-                        Ingeniero Full Stack especializado en <span className="text-[#34A5EB] font-medium">Inteligencia Artificial</span> y desarrollo de experiencias digitales de alto rendimiento.
+                        Construyo <span className="text-foreground">agentes autónomos</span>, pipelines RAG y
+                        plataformas SaaS multitenant — con interfaces tan afiladas como la infraestructura que
+                        hay debajo.
                     </motion.p>
 
-                    {/* CTA Buttons */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                        className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+                        variants={fadeUp}
+                        transition={{ duration: 0.7, ease }}
+                        className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-center"
                     >
-                        <a
-                            href="#projects"
-                            className="group relative px-8 py-4 rounded-xl bg-[#1AB8A6] text-[#0F172A] font-bold text-sm transition-all hover:bg-[#159c8b] hover:shadow-[0_0_20px_rgba(26,184,166,0.4)] flex items-center justify-center gap-2"
-                        >
-                            Ver Proyectos
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </a>
-
-                        <a
-                            href="/CV_Brandon Garcia.pdf"
-                            download
-                            className="group px-8 py-4 rounded-xl border border-slate-700 text-white font-medium text-sm transition-all hover:border-[#1AB8A6]/50 hover:bg-[#1AB8A6]/5 flex items-center justify-center gap-2 backdrop-blur-sm"
-                        >
-                            <FileDown size={18} />
-                            Descargar CV
-                        </a>
-                    </motion.div>
-
-                    {/* Social Links */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.6, delay: 0.8 }}
-                        className="mt-10 flex items-center justify-center lg:justify-start gap-6"
-                    >
-                        {[
-                            { href: 'https://github.com/garcia-bj', icon: Github },
-                        ].map((social, idx) => (
+                        <Magnetic>
                             <a
-                                key={idx}
-                                href={social.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-slate-500 hover:text-[#1AB8A6] transition-colors hover:scale-110 transform duration-200"
+                                href="#projects"
+                                className="group flex cursor-pointer items-center justify-center gap-2.5 rounded-full bg-primary px-8 py-4 text-sm font-bold tracking-wide text-primary-foreground transition-colors duration-200 hover:bg-secondary"
                             >
-                                <social.icon size={24} />
+                                Ver proyectos
+                                <ArrowRight size={17} className="transition-transform duration-200 group-hover:translate-x-1" />
                             </a>
-                        ))}
+                        </Magnetic>
+
+                        <Magnetic strength={0.22}>
+                            <a
+                                href="/CV_Brandon Garcia.pdf"
+                                download
+                                className="group flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-border px-8 py-4 text-sm font-medium text-foreground/80 backdrop-blur-sm transition-colors duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-foreground"
+                            >
+                                <FileDown size={17} />
+                                Descargar CV
+                            </a>
+                        </Magnetic>
+
+                        <a
+                            href="https://github.com/garcia-bj"
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="Perfil de GitHub"
+                            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
+                        >
+                            <Github size={19} />
+                        </a>
                     </motion.div>
-                </div>
+                </motion.div>
 
-                {/* Right: Visual Element (Constrained) */}
-                <div className="flex-1 w-full flex justify-center lg:justify-end relative">
+                {/* Columna derecha: retrato editorial */}
+                <motion.div
+                    initial={{ opacity: 0, y: 40, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 1, delay: 0.25, ease }}
+                    style={{ y: cardY }}
+                    className="relative mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
+                >
+                    {/* Marco desplazado: profundidad sin sombras genéricas */}
+                    <div className="absolute -inset-3 rounded-[2rem] border border-primary/20" />
+                    <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-tr from-primary/20 via-transparent to-secondary/20 opacity-60 blur-2xl" />
+
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8, rotateY: -20 }}
-                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="relative w-full max-w-md aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border border-white/10"
-                        style={{ perspective: '1000px' }}
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                        className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-card"
                     >
-                        {/* Background for Card */}
-                        <div className="absolute inset-0 bg-slate-800/50 backdrop-blur-xl z-0" />
+                        <div className="relative aspect-[4/5]">
+                            <Image
+                                src="/perfil.avif"
+                                alt="Retrato de Brandon Garcia"
+                                fill
+                                priority
+                                sizes="(max-width: 1024px) 100vw, 420px"
+                                className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                        </div>
 
-                        {/* Interactive glow behind image */}
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-[#1AB8A6] to-[#34A5EB] opacity-20 blur-2xl animate-pulse" />
-
-                        <div className="relative z-10 w-full h-full p-2">
-                            <div className="relative w-full h-full rounded-2xl overflow-hidden bg-background">
-                                <Image
-                                    src="/perfil.avif"
-                                    alt="Profile Visual"
-                                    fill
-                                    className="object-cover opacity-90 hover:scale-105 transition-transform duration-700 ease-out"
-                                />
-                                {/* Gradient Overlay on Image */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
-
-                                {/* Floating Tags inside card */}
-                                <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3">
-                                    <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
-                                        <Cpu size={20} className="text-[#1AB8A6]" />
-                                        <div>
-                                            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Enfoque</p>
-                                            <p className="text-xs text-white font-medium">Inteligencia Artificial</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
-                                        <Terminal size={20} className="text-[#34A5EB]" />
-                                        <div>
-                                            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tecnologías</p>
-                                            <p className="text-xs text-white font-medium">Next.js & Python</p>
-                                        </div>
-                                    </div>
+                        {/* Ficha técnica al pie del retrato */}
+                        <div className="absolute inset-x-0 bottom-0 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 bg-background/60 backdrop-blur-xl">
+                            <div className="flex items-center gap-2.5 p-4">
+                                <Cpu size={16} className="shrink-0 text-primary" />
+                                <div className="min-w-0">
+                                    <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">Enfoque</p>
+                                    <p className="truncate text-xs font-medium text-foreground">IA aplicada</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2.5 p-4">
+                                <Terminal size={16} className="shrink-0 text-secondary" />
+                                <div className="min-w-0">
+                                    <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">Stack</p>
+                                    <p className="truncate text-xs font-medium text-foreground">Next.js · Python</p>
                                 </div>
                             </div>
                         </div>
                     </motion.div>
-                </div>
+                </motion.div>
+            </motion.div>
 
-            </div>
+            {/* Indicador de scroll */}
+            <motion.div
+                style={{ opacity: cueOpacity }}
+                className="absolute bottom-8 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
+            >
+                <span className="font-mono text-[9px] uppercase tracking-[0.35em] text-muted-foreground/50">Scroll</span>
+                <div className="h-10 w-px overflow-hidden bg-border">
+                    <div className="h-4 w-px animate-scan bg-primary" />
+                </div>
+            </motion.div>
         </section>
     );
 };

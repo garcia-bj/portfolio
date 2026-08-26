@@ -1,30 +1,21 @@
 import Hero from '@/components/sections/Hero';
+import { Stats } from '@/components/sections/Stats';
 import { TechStack } from '@/components/sections/Stack';
 import Projects from '@/components/sections/Projects';
 import { Experience } from '@/components/sections/Experience';
 import { Contact } from '@/components/sections/Contact';
-import { SectionReveal } from '@/components/ui/SectionReveal';
 
+// Cada sección trae sus propias animaciones de scroll; no hace falta envolverlas
+// (un wrapper con transform rompería el apilado sticky de Projects).
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
+    <main className="min-h-screen bg-background text-foreground">
       <Hero />
-
-      <SectionReveal width="100%" threshold={0.1}>
-        <TechStack />
-      </SectionReveal>
-
-      <SectionReveal width="100%" threshold={0.1}>
-        <Projects />
-      </SectionReveal>
-
-      <SectionReveal width="100%" threshold={0.1}>
-        <Experience />
-      </SectionReveal>
-
-      <SectionReveal width="100%" threshold={0.1}>
-        <Contact />
-      </SectionReveal>
+      <Stats />
+      <TechStack />
+      <Projects />
+      <Experience />
+      <Contact />
     </main>
   );
 }

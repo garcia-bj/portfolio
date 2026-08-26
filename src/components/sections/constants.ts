@@ -5,13 +5,14 @@ export const PROJECTS = [
         title: 'ASC: Agent Service Client',
         category: 'SaaS Platform / AI',
         role: 'Founder & Lead AI Engineer',
-        description: 'Arquitectura Multitenant diseñada para el despliegue masivo de agentes de IA con aislamiento lógico de datos por organización.',
+        description: 'Plataforma SaaS multitenant para el despliegue masivo de agentes de IA multicanal (WhatsApp, Instagram y Messenger) sobre el ecosistema de Meta.',
         details: [
             'Orquestación Agentica: Flujos cíclicos con LangGraph para autonomía y memoria persistente.',
+            'Multicanal Meta: Integración con Meta Cloud API para conversaciones en WhatsApp, Instagram y Messenger.',
             'Optimización RAG: Motor de búsqueda semántica con Qdrant para contexto empresarial real.'
         ],
         image: '/ASC.png',
-        tags: ['LangGraph', 'Qdrant', 'SaaS'],
+        tags: ['LangGraph', 'Qdrant', 'Multicanal', 'Meta Cloud API'],
         link: 'https://autosalescloser.com',
         github: '#'
     },
@@ -43,6 +44,38 @@ export const PROJECTS = [
         image: '/rag-ecosystem.png',
         tags: ['GPT-4o', 'MCP', 'Multimodal'],
         link: 'https://github.com/garcia-bj/rag-ecosystem',
+        github: '#'
+    },
+    {
+        id: 4,
+        title: 'De-Vega: Menús con IA',
+        category: 'FoodTech / IA',
+        role: 'Full Stack Developer & AI Engineer',
+        description: 'Aplicación web de creación y edición de imágenes con IA para generar menús personalizados de restaurante, con autopublicación automática a redes sociales.',
+        details: [
+            'Generación de imágenes: Creación y edición asistida por IA para menús personalizados.',
+            'Autopublicación: Publicación automática como post e historia en Instagram y Facebook.',
+            'Almacenamiento: Gestión de assets con MinIO.'
+        ],
+        image: '/devega.svg',
+        tags: ['IA Generativa', 'MinIO', 'Instagram API', 'Facebook API'],
+        link: 'https://github.com/garcia-bj/dashboard-de-vega',
+        github: '#'
+    },
+    {
+        id: 5,
+        title: 'Genuino Importaciones',
+        category: 'Web / Automatización',
+        role: 'Full Stack Developer & Automation Engineer',
+        description: 'Sitio web corporativo y formulario inteligente de embudos de ventas con filtrado automático de clientes y asignación a asesores comerciales.',
+        details: [
+            'Web corporativa: Sitio web para Genuino Importaciones.',
+            'Formulario inteligente: Filtrado y priorización automática de leads.',
+            'Asignación: Designación y notificación automática al asesor comercial correspondiente.'
+        ],
+        image: '/genuino.svg',
+        tags: ['n8n', 'CRM', 'Automatización', 'Embudos de Venta'],
+        link: 'https://genuinoimportaciones.com/',
         github: '#'
     }
 ];
