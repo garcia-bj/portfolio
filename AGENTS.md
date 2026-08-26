@@ -88,53 +88,57 @@ fundido sobre el `<g>` que los agrupa, que React no toca.
 
 ## Pieza 3D: el modulo del stack
 
-El objeto ES el contenido: una capa por categoria de `Stack.tsx`. Se despieza y
-gira mientras recorres los modulos.
+El objeto ES el contenido: una capa por categoria de `Stack.tsx`. Gira siempre,
+se despieza con el scroll y deriva de lado a lado.
 
-### Pipeline
+### Como esta hecho
 
-1. `3d/build_stack_module.py` construye la escena y renderiza la secuencia:
-   ```
-   blender --background --factory-startup --python 3d/build_stack_module.py -- --frames 40 --res 900 1200
-   blender --background --factory-startup --python 3d/build_stack_module.py -- --test   # 1 frame, para iterar
-   ```
-2. Los frames salen a `3d/exports/` (ignorado por git) y se copian a
-   `public/3d/module/`.
-3. `StackModule.tsx` los pinta en un canvas, scrubbeados por el progreso del
-   track de `Stack.tsx`.
+`StackModule3D.tsx` lo construye en three.js con las **mismas primitivas** que
+`3d/build_stack_module.py` (cilindros, toros, cubos). **No hay ningun `.glb`**:
+cero peso de asset. Blender sigue siendo donde se disena y previsualiza la pieza;
+la web la dibuja.
 
-Coste actual: **40 frames, 1,02 MB**, 35 s de render. Precarga diferida: no se
-descarga nada hasta que la seccion se acerca.
+Antes esto era una secuencia de 40 WebP (1.044 KB). three.js pesa 182 KB gzip,
+asi que el cambio **aligero el sitio en ~860 KB** ademas de mejorarlo.
 
-### Decisiones que no son obvias
+### Por que 3D real y no una secuencia de imagenes
 
-- **Se renderiza OPACO sobre negro, no con alfa.** Con transparencia el canal
-  alfa se lleva el 84% del peso del WebP (se codifica sin perdida pase lo que
-  pase): 49 KB/frame frente a 25 KB. La web lo compone con
-  `mix-blend-mode: screen`, que sobre fondo oscuro vuelve el negro invisible.
-- **`mix-blend-mode` necesita un fondo opaco en su contexto de apilamiento.**
-  Por eso el contenedor `sticky` lleva `bg-background` y el envoltorio del canvas
-  no usa `translate` (un transform crearia otro contexto y aislaria la mezcla).
-  Sin esas dos cosas se ve el rectangulo negro del render.
-- **Canvas y no `<img>`**: cambiar `src` 40 veces parpadea. Con las imagenes ya
-  decodificadas en memoria el scrub es continuo.
-- **Freestyle da el trazo**, no hay materiales visibles: EEVEE + `use_freestyle`.
-- **El array circular exige el origen en el centro de giro.** Si el origen queda
-  fuera, cada copia acumula la traslacion y las coordenadas divergen a 1e33. El
-  diente se crea desplazado y luego se hornea con `transform_apply`.
-- **Blender 5 quito `action.fcurves`** (sistema de slots). `iter_fcurves()`
-  soporta las dos APIs.
-- El encuadre es automatico (`scene_bounds` + `TRACK_TO`), asi que se pueden
-  cambiar radios, capas o separacion sin recolocar la camara a mano.
+Una secuencia no puede separar dos movimientos independientes. Aqui conviven:
 
-### Herramientas
+- **Giro continuo** (`rig.rotation.y += delta`), que no depende del scroll. Es lo
+  que hace que nunca se quede quieto.
+- **Despiece** ligado al progreso del track.
+- **Deriva lateral** hacia `DRIFT[active % 4]`, suavizada por interpolacion.
 
-- Blender 5.2 en `C:\Program Files\Blender Foundation\Blender 5.2`.
-- MCP `blender` registrado a nivel usuario (`uvx blender-mcp`). El addon vive en
-  `%APPDATA%/Blender Foundation/Blender/5.2/scripts/addons/blender_mcp.py`.
-  Para usarlo hay que arrancarlo desde Blender: `N` en el viewport -> pestana
-  BlenderMCP -> Start MCP Server. **No hace falta para regenerar la secuencia**:
-  el script corre headless.
+Con fotogramas pregenerados habria que renderizar el producto cartesiano de los
+tres ejes.
+
+### Trampas
+
+- **Cada capa lleva un relleno opaco ademas de las aristas.** El relleno va del
+  color del fondo (`OCCLUDER`) y no se ve, pero escribe en el buffer de
+  profundidad y **oculta las lineas de la cara trasera**. Sin el, el objeto se ve
+  transparente como una jaula de alambre. Es lo que hacia Freestyle en Blender.
+- `polygonOffset` en ese relleno evita que las aristas parpadeen sobre el.
+- Las geometrias de cada capa se fusionan con `mergeGeometries` para no acabar
+  con ~230 draw calls (28 dientes x 8 capas).
+- El bucle de render se para cuando el modulo no esta en pantalla
+  (IntersectionObserver) y respeta `prefers-reduced-motion`.
+
+### El relevo de textos
+
+`Stack.tsx` renderiza **dos** bloques de copy a la vez: el actual y el siguiente.
+Sus opacidades y desplazamientos salen de la parte fraccionaria del progreso
+(`FADE_START`), no del indice entero. Por eso ves llegar el texto siguiente
+mientras el actual se va, en vez de un cambio brusco al saltar de modulo.
+
+El texto va siempre al lado contrario del objeto, asi que nunca se pisan.
+
+### Verificar animaciones en el navegador
+
+Chrome **estrangula `requestAnimationFrame` en pestanas sin foco**. Dos capturas
+identicas separadas por segundos NO prueban que algo este quieto: puede ser la
+pestana sin foco. Comprobado en carne propia comparando con animejs.com.
 
 ## Tailwind v4 gotchas
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
 import { animate, stagger } from 'animejs';
+import { StackModule3D } from './StackModule3D';
 import {
     TbDeviceDesktop, TbServerBolt, TbDatabase, TbBrain,
     TbCloud, TbTerminal2
@@ -12,8 +13,6 @@ import type { IconType } from 'react-icons';
 import { Cpu, Bot, Terminal, Waypoints, Sparkles, Braces } from 'lucide-react';
 import { SectionId } from '@/types';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { Reveal } from '@/components/ui/Reveal';
-import { StackModule } from './StackModule';
 
 // Iconos servidos desde /public/icons (solo se usan en el marquee)
 const techIcons: Record<string, string> = {
@@ -183,154 +182,14 @@ const categories: Category[] = [
     }
 ];
 
-/* ------------------------------------------------------------------ */
-/* Geometría del dial                                                  */
-/* ------------------------------------------------------------------ */
-
-const VB_W = 1000;
-const VB_H = 640;
-const CX = 500;
-const CY = 320;
-const R_ARC = 236;
-const R_INNER = 170; // hueco libre para el contenido del modulo
-const SEG = 360 / categories.length;
-const GAP = 6; // grados de separación entre segmentos
-const TICKS = 96;
-
-const polar = (r: number, deg: number) => {
-    const a = (deg * Math.PI) / 180;
-    return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
-};
-
-const arcPath = (r: number, from: number, to: number) => {
-    const s = polar(r, from);
-    const e = polar(r, to);
-    const large = Math.abs(to - from) > 180 ? 1 : 0;
-    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
-};
-
-/* ------------------------------------------------------------------ */
-
-function StackDial({ active, started }: { active: number; started: boolean }) {
-    const ref = useRef<SVGSVGElement>(null);
-
-    // Estado inicial: trazos sin dibujar y marcas invisibles. Se aplica al montar
-    // para que no haya un salto cuando arranca la animacion.
-    useEffect(() => {
-        const root = ref.current;
-        if (!root) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        root.querySelectorAll<SVGGeometryElement>('[data-draw]').forEach((el) => {
-            const len = el.getTotalLength();
-            el.style.strokeDasharray = `${len}`;
-            el.style.strokeDashoffset = `${len}`;
-        });
-        root.querySelectorAll<SVGElement>('[data-fade]').forEach((el) => {
-            el.style.opacity = '0';
-        });
-    }, []);
-
-    // El dial vive dentro de un contenedor fijado ocho pantallas: ni el
-    // ScrollObserver de anime ni un IntersectionObserver aciertan su ventana.
-    // El disparo viene del progreso del propio track.
-    useEffect(() => {
-        const root = ref.current;
-        if (!root || !started) return;
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-        // Medimos la longitud a mano en vez de usar createDrawable: aqui conviven
-        // elementos que React vuelve a renderizar y el helper se quedaba a medias.
-        const strokes = animate(root.querySelectorAll('[data-draw]'), {
-            strokeDashoffset: 0,
-            duration: 1300,
-            delay: stagger(70),
-            ease: 'inOut(3)',
-        });
-
-        const fades = animate(root.querySelectorAll('[data-fade]'), {
-            opacity: [0, 1],
-            duration: 500,
-            delay: stagger(6, { start: 400 }),
-            ease: 'out(2)',
-        });
-
-        return () => {
-            strokes.revert();
-            fades.revert();
-        };
-    }, [started]);
-
-    return (
-        <svg
-            ref={ref}
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            className="w-full"
-            role="img"
-            aria-label="Instrumento del stack técnico"
-        >
-            {/* Retícula */}
-            <line data-draw x1={CX - 290} y1={CY} x2={CX + 290} y2={CY} stroke="currentColor" strokeWidth="1" className="text-border" />
-            <line data-draw x1={CX} y1={CY - 290} x2={CX} y2={CY + 290} stroke="currentColor" strokeWidth="1" className="text-border" />
-
-            {/* Anillos concéntricos */}
-            <circle data-draw cx={CX} cy={CY} r={R_INNER} fill="none" stroke="currentColor" strokeWidth="1" className="text-border" />
-            <circle data-draw cx={CX} cy={CY} r={R_ARC - 22} fill="none" stroke="currentColor" strokeWidth="1" className="text-border" />
-            {/* El anillo punteado ya usa dasharray, asi que entra con un fundido */}
-            <circle data-fade cx={CX} cy={CY} r={R_INNER + 34} fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 6" className="text-border" />
-
-            {/* Corona de marcas */}
-            <g>
-                {Array.from({ length: TICKS }, (_, i) => {
-                    const deg = (360 / TICKS) * i;
-                    const long = i % 8 === 0;
-                    const a = polar(R_ARC - 22, deg);
-                    const b = polar(R_ARC - (long ? 40 : 32), deg);
-                    return (
-                        <line
-                            key={i}
-                            data-fade
-                            x1={a.x.toFixed(2)}
-                            y1={a.y.toFixed(2)}
-                            x2={b.x.toFixed(2)}
-                            y2={b.y.toFixed(2)}
-                            stroke="currentColor"
-                            strokeWidth={long ? 1.5 : 1}
-                            className={long ? 'text-primary/40' : 'text-border'}
-                        />
-                    );
-                })}
-            </g>
-
-            {/* Un segmento por categoría: el activo se enciende.
-                Sin animacion de trazo aqui — React reescribe estos nodos en cada
-                cambio de modulo y pisaria los estilos en linea de anime.js. */}
-            <g data-fade>
-                {categories.map((c, i) => {
-                    const from = -90 + i * SEG + GAP / 2;
-                    const to = -90 + (i + 1) * SEG - GAP / 2;
-                    const isActive = active === i;
-                    return (
-                        <path
-                            key={c.id}
-                            d={arcPath(R_ARC, from, to)}
-                            fill="none"
-                            stroke={c.color}
-                            strokeWidth={isActive ? 8 : 3}
-                            strokeLinecap="round"
-                            opacity={isActive ? 1 : 0.16}
-                            className="transition-all duration-500"
-                            style={isActive ? { filter: `drop-shadow(0 0 12px ${c.color})` } : undefined}
-                        />
-                    );
-                })}
-            </g>
-        </svg>
-    );
-}
-
 /** Regla de progreso: el marcador recorre los módulos, como el film-strip de anime.js */
-function ProgressRuler({ progress }: { progress: ReturnType<typeof useScroll>['scrollYProgress'] }) {
+function ProgressRuler({
+    progress,
+    color,
+}: {
+    progress: ReturnType<typeof useScroll>['scrollYProgress'];
+    color: string;
+}) {
     const left = useTransform(progress, [0, 1], ['0%', '100%']);
     return (
         <div className="pointer-events-none absolute bottom-10 right-6 hidden w-72 lg:right-10 lg:block">
@@ -339,8 +198,8 @@ function ProgressRuler({ progress }: { progress: ReturnType<typeof useScroll>['s
                     <span key={i} className="h-3 w-px bg-muted-foreground/25" />
                 ))}
                 <motion.span
-                    style={{ left }}
-                    className="absolute top-1/2 h-5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                    style={{ left, backgroundColor: color }}
+                    className="absolute top-1/2 h-5 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-500"
                 />
             </div>
         </div>
@@ -389,7 +248,7 @@ function TechMarquee() {
 /* ------------------------------------------------------------------ */
 
 /** Fichas de la categoría activa: los logos vuelven, dentro del instrumento. */
-function ModuleTechs({ category }: { category: Category }) {
+function ModuleTechs({ category, align = 'left' }: { category: Category; align?: 'left' | 'right' }) {
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -412,9 +271,16 @@ function ModuleTechs({ category }: { category: Category }) {
     }, [category.id]);
 
     return (
-        <div ref={ref} className="mt-7 flex flex-wrap items-start gap-x-5 gap-y-6">
+        <div
+            ref={ref}
+            className={`mt-7 flex flex-wrap items-start gap-x-5 gap-y-6 ${align === 'right' ? 'justify-end' : ''}`}
+        >
             {category.techs.map((t) => (
-                <div key={t.name} data-chip className="flex w-[4.6rem] flex-col items-start gap-2">
+                <div
+                    key={t.name}
+                    data-chip
+                    className={`flex w-[4.6rem] flex-col gap-2 ${align === 'right' ? 'items-end text-right' : 'items-start'}`}
+                >
                     <TechIcon name={t.name} className="h-7 w-7" />
                     <span className="font-mono text-[9px] uppercase leading-tight tracking-[0.1em] text-muted-foreground/70">
                         {t.name}
@@ -425,12 +291,62 @@ function ModuleTechs({ category }: { category: Category }) {
     );
 }
 
+/**
+ * Recorrido lateral del modulo: derecha, izquierda, y dos posiciones
+ * intermedias. El texto siempre va al lado contrario, asi nunca se pisan.
+ */
+const MODULE_COLORS = categories.map((c) => c.color);
+
+const DRIFT = [0.62, -0.62, 0.26, -0.26];
+
+/** Transicion suave entre dos umbrales, para el relevo de textos. */
+const smoothstep = (edge0: number, edge1: number, x: number) => {
+    const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+};
+
+const FADE_START = 0.68;   // a partir de aqui empieza a marcharse el texto actual
+
+function ModuleCopy({
+    category,
+    index,
+    total,
+    align,
+}: {
+    category: Category;
+    index: number;
+    total: number;
+    align: 'left' | 'right';
+}) {
+    return (
+        <div className={align === 'right' ? 'text-right' : ''}>
+            <span className="font-mono text-[11px] tracking-[0.3em] text-muted-foreground/50">
+                {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+            </span>
+
+            <h3
+                className="mt-5 font-display text-[clamp(2rem,4vw,3.5rem)] font-extrabold leading-[0.95]"
+                style={{ color: category.color }}
+            >
+                {category.title}
+            </h3>
+
+            <p className="mt-5 text-base leading-relaxed text-muted-foreground/80">
+                {category.description}.
+            </p>
+
+            <div className={`mt-8 h-px w-full max-w-[18rem] bg-border ${align === 'right' ? 'ml-auto' : ''}`} />
+
+            <ModuleTechs category={category} align={align} />
+        </div>
+    );
+}
+
 export function TechStack() {
     const trackRef = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState(0);
-    const [started, setStarted] = useState(false);
 
-    // Un modulo por categoria: el dial se queda fijo y el contenido rota
+    // Un modulo por categoria: el 3D se queda fijo en pantalla y el texto rota
     const { scrollYProgress } = useScroll({
         target: trackRef,
         offset: ['start start', 'end end'],
@@ -439,10 +355,26 @@ export function TechStack() {
     useMotionValueEvent(scrollYProgress, 'change', (p) => {
         const i = Math.min(categories.length - 1, Math.max(0, Math.floor(p * categories.length)));
         setActive(i);
-        setStarted(true);
     });
 
     const current = categories[active];
+    const next = categories[Math.min(active + 1, categories.length - 1)];
+    const drift = DRIFT[active % DRIFT.length];
+    const align: 'left' | 'right' = drift > 0 ? 'left' : 'right';
+    const nextDrift = DRIFT[(active + 1) % DRIFT.length];
+    const nextAlign: 'left' | 'right' = nextDrift > 0 ? 'left' : 'right';
+
+    // Relevo de textos ligado al scroll: el saliente se va mientras el entrante
+    // ya esta llegando, en vez de cambiar de golpe al saltar de indice.
+    const raw = useTransform(scrollYProgress, (p) => p * categories.length);
+    const frac = useTransform(raw, (v) => v - Math.floor(v));
+
+    const outOpacity = useTransform(frac, (f) => 1 - smoothstep(FADE_START, 1, f));
+    const outY = useTransform(frac, (f) => -smoothstep(FADE_START, 1, f) * 48);
+    const inOpacity = useTransform(frac, (f) => smoothstep(FADE_START, 1, f));
+    const inY = useTransform(frac, (f) => (1 - smoothstep(FADE_START, 1, f)) * 48);
+
+    const isLast = active === categories.length - 1;
 
     return (
         <section id={SectionId.STACK} className="relative">
@@ -461,95 +393,70 @@ export function TechStack() {
 
                 <TechMarquee />
 
-                {/* --- Módulos fijados (escritorio) --- */}
+                {/* Modulos fijados. Ya no es `hidden md:block`: el 3D pesa lo mismo
+                    en cualquier pantalla porque se dibuja, no se descarga. */}
                 <div
                     ref={trackRef}
-                    className="relative hidden md:block"
+                    className="relative mt-8"
                     style={{ height: `${categories.length * 62}vh` }}
                 >
-                    {/* `bg-background` no es decorativo: sin un fondo opaco aqui, el
-                        `mix-blend-mode: screen` del canvas 3D no tiene contra que
-                        mezclar y el negro del render se ve como un rectangulo. */}
-                    <div className="sticky top-0 flex h-screen items-center overflow-hidden bg-background">
+                    <div className="sticky top-0 h-screen overflow-hidden">
                         <div className="pointer-events-none absolute left-0 top-1/4 h-96 w-96 rounded-full bg-primary/[0.07] blur-[120px]" />
                         <div className="pointer-events-none absolute bottom-1/4 right-0 h-96 w-96 rounded-full bg-secondary/[0.05] blur-[120px]" />
-                        <div className="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,20rem)_1fr] items-center gap-6 px-6 lg:grid-cols-[minmax(0,24rem)_1fr] lg:gap-10 lg:px-10">
-                            {/* Columna izquierda: el módulo activo */}
-                            <div key={current.id} className="module-copy">
-                                <span className="font-mono text-[11px] tracking-[0.3em] text-muted-foreground/50">
-                                    {String(active + 1).padStart(2, '0')} / {String(categories.length).padStart(2, '0')}
-                                </span>
 
-                                <h3
-                                    className="mt-5 font-display text-[clamp(2rem,4vw,3.5rem)] font-extrabold leading-[0.95] transition-colors duration-500"
-                                    style={{ color: current.color }}
-                                >
-                                    {current.title}
-                                </h3>
+                        {/* El modulo ocupa todo el ancho y deriva de lado a lado */}
+                        <div className="absolute inset-0">
+                            <StackModule3D
+                                progress={scrollYProgress}
+                                colors={MODULE_COLORS}
+                                drift={drift}
+                            />
+                        </div>
 
-                                <p className="mt-5 max-w-sm text-base leading-relaxed text-muted-foreground/80">
-                                    {current.description}.
-                                </p>
+                        {/* Velo bajo el texto: en movil el 3D pasa por detras */}
+                        <div
+                            className={`pointer-events-none absolute inset-y-0 w-full max-w-xl bg-gradient-to-r from-background via-background/85 to-transparent md:max-w-2xl ${align === 'right' ? 'right-0 rotate-180' : 'left-0'
+                                }`}
+                        />
 
-                                <div className="mt-8 h-px w-full max-w-[18rem] bg-border" />
+                        <div className="relative z-10 flex h-full items-center">
+                            <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+                                <div className="relative h-[26rem] md:h-[24rem]">
+                                    <motion.div
+                                        key={current.id}
+                                        style={{ opacity: outOpacity, y: outY }}
+                                        className={`absolute inset-x-0 top-0 max-w-[22rem] md:max-w-sm ${align === 'right' ? 'ml-auto' : ''
+                                            }`}
+                                    >
+                                        <ModuleCopy
+                                            category={current}
+                                            index={active}
+                                            total={categories.length}
+                                            align={align}
+                                        />
+                                    </motion.div>
 
-                                <ModuleTechs category={current} />
-                            </div>
-
-                            {/* El instrumento enmarca la secuencia 3D: el modulo
-                                se despieza mientras recorres las categorias */}
-                            <div className="relative">
-                                <StackDial active={active} started={started} />
-                                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                                    <div className="aspect-[3/4] h-[126%]">
-                                        <StackModule progress={scrollYProgress} start={started} />
-                                    </div>
+                                    {!isLast && (
+                                        <motion.div
+                                            key={`${next.id}-next`}
+                                            style={{ opacity: inOpacity, y: inY }}
+                                            className={`absolute inset-x-0 top-0 max-w-[22rem] md:max-w-sm ${nextAlign === 'right' ? 'ml-auto' : ''
+                                                }`}
+                                        >
+                                            <ModuleCopy
+                                                category={next}
+                                                index={active + 1}
+                                                total={categories.length}
+                                                align={nextAlign}
+                                            />
+                                        </motion.div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <ProgressRuler progress={scrollYProgress} />
+                        <ProgressRuler progress={scrollYProgress} color={current.color} />
                     </div>
-                </div>
-
-                {/* --- Índice tipográfico (móvil) --- */}
-                <div className="mx-auto mt-20 max-w-6xl px-6 pb-24 md:hidden">
-                    <Reveal items step={70} distance={28}>
-                        {categories.map((c, i) => (
-                            <div
-                                key={c.id}
-                                data-reveal-item
-                                className="border-t border-border/50 py-7"
-                            >
-                                <span className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground/40">
-                                    {String(i + 1).padStart(2, '0')}
-                                </span>
-                                <h3
-                                    className="mt-2 font-display text-2xl font-bold leading-none"
-                                    style={{ color: c.color }}
-                                >
-                                    {c.title}
-                                </h3>
-                                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/50">
-                                    {c.description}
-                                </p>
-                                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-                                    {c.techs.map((t, ti) => (
-                                        <span key={t.name} className="flex items-center gap-3">
-                                            {ti > 0 && <span className="text-border">·</span>}
-                                            <span
-                                                className="font-mono text-[12px] tracking-[0.06em] text-foreground"
-                                                style={{ opacity: 0.4 + (t.level / 100) * 0.6 }}
-                                            >
-                                                {t.name}
-                                            </span>
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                        <div data-reveal-item className="border-t border-border/50" />
-                    </Reveal>
                 </div>
             </div>
         </section>
