@@ -88,7 +88,7 @@ const categories: Category[] = [
         title: "Backend",
         description: "APIs robustas y escalables",
         icon: TbServerBolt,
-        color: "#14B8A6",
+        color: "#22D3EE",
         techs: [
             { name: "Node.js", level: 90 },
             { name: "Python", level: 92 },
@@ -101,7 +101,7 @@ const categories: Category[] = [
         title: "Bases de Datos",
         description: "Almacenamiento optimizado",
         icon: TbDatabase,
-        color: "#22D3EE",
+        color: "#5B8DEF",
         techs: [
             { name: "PostgreSQL", level: 90 },
             { name: "Supabase", level: 95 },
@@ -130,7 +130,7 @@ const categories: Category[] = [
         title: "Tooling Agéntico",
         description: "Desarrollo asistido por agentes",
         icon: Bot,
-        color: "#5EEAD4",
+        color: "#A8E063",
         techs: [
             { name: "Claude Code", level: 95 },
             { name: "OpenCode", level: 85 },
@@ -144,7 +144,7 @@ const categories: Category[] = [
         title: "DevOps & Cloud",
         description: "Infraestructura automatizada",
         icon: TbCloud,
-        color: "#34D399",
+        color: "#FFD93D",
         techs: [
             { name: "Docker", level: 90 },
             { name: "Kubernetes", level: 78 },
@@ -159,7 +159,7 @@ const categories: Category[] = [
         title: "Ecosistema Meta",
         description: "Aplicaciones multicanal",
         icon: SiMeta,
-        color: "#0D9488",
+        color: "#FF9F43",
         techs: [
             { name: "Meta Cloud API", level: 90 },
             { name: "WhatsApp Business API", level: 92 },
@@ -172,7 +172,7 @@ const categories: Category[] = [
         title: "Herramientas",
         description: "Productividad y versionado",
         icon: TbTerminal2,
-        color: "#2DD4BF",
+        color: "#FF7A6B",
         techs: [
             { name: "Git", level: 95 },
             { name: "Linux", level: 85 },
@@ -297,7 +297,9 @@ function ModuleTechs({ category, align = 'left' }: { category: Category; align?:
  */
 const MODULE_COLORS = categories.map((c) => c.color);
 
-const DRIFT = [0.62, -0.62, 0.26, -0.26];
+// Recorrido lateral. Antes era la mitad y el modulo parecia temblar en el
+// sitio en vez de cruzar la pantalla.
+const DRIFT = [1.0, -1.0, 0.52, -0.52];
 
 /** Transicion suave entre dos umbrales, para el relevo de textos. */
 const smoothstep = (edge0: number, edge1: number, x: number) => {
@@ -305,7 +307,11 @@ const smoothstep = (edge0: number, edge1: number, x: number) => {
     return t * t * (3 - 2 * t);
 };
 
-const FADE_START = 0.68;   // a partir de aqui empieza a marcharse el texto actual
+// El relevo arranca antes y con mas recorrido: con 48px de viaje el texto
+// entrante parecia aparecer ahi mismo en vez de venir de abajo.
+const FADE_START = 0.52;
+const TRAVEL_IN = 190;    // px que sube el entrante
+const TRAVEL_OUT = 130;   // px que sigue subiendo el saliente
 
 function ModuleCopy({
     category,
@@ -369,10 +375,12 @@ export function TechStack() {
     const raw = useTransform(scrollYProgress, (p) => p * categories.length);
     const frac = useTransform(raw, (v) => v - Math.floor(v));
 
-    const outOpacity = useTransform(frac, (f) => 1 - smoothstep(FADE_START, 1, f));
-    const outY = useTransform(frac, (f) => -smoothstep(FADE_START, 1, f) * 48);
-    const inOpacity = useTransform(frac, (f) => smoothstep(FADE_START, 1, f));
-    const inY = useTransform(frac, (f) => (1 - smoothstep(FADE_START, 1, f)) * 48);
+    const outOpacity = useTransform(frac, (f) => 1 - smoothstep(FADE_START, 0.94, f));
+    const outY = useTransform(frac, (f) => -smoothstep(FADE_START, 1, f) * TRAVEL_OUT);
+    // La opacidad entra despues que el movimiento: el texto ya viene subiendo
+    // cuando empieza a hacerse visible, y por eso se lee como que "llega".
+    const inOpacity = useTransform(frac, (f) => smoothstep(FADE_START + 0.16, 1, f));
+    const inY = useTransform(frac, (f) => (1 - smoothstep(FADE_START, 1, f)) * TRAVEL_IN);
 
     const isLast = active === categories.length - 1;
 
@@ -410,6 +418,7 @@ export function TechStack() {
                                 progress={scrollYProgress}
                                 colors={MODULE_COLORS}
                                 drift={drift}
+                                active={active}
                             />
                         </div>
 

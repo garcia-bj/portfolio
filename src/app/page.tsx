@@ -16,9 +16,9 @@ export default function Home() {
       <Stats />
       <TechStack />
       <Projects />
+      <Dragon />
       <Experience />
       <Toolbox />
-      <Dragon />
       <Contact />
     </main>
   );

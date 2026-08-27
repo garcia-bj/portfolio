@@ -32,6 +32,11 @@ const SPECS: { kind: Kind; radius: number; height: number }[] = [
     { kind: 'bolts', radius: 1.52, height: 0.28 },
 ];
 
+/** Color de las capas apagadas: el trazo base del sitio. */
+const DIM = '#0C6B66';
+const DIM_OPACITY = 0.46;
+const HOT_OPACITY = 1.0;
+
 const GAP_ASSEMBLED = 0.06;
 const GAP_EXPLODED = 0.52;
 const EDGE_THRESHOLD = 28;   // grados: por debajo, la arista no se dibuja
@@ -106,15 +111,20 @@ export function StackModule3D({
     progress,
     colors,
     drift,
+    active,
 }: {
     progress: MotionValue<number>;
     colors: string[];
     /** Desplazamiento lateral objetivo, de -1 (izquierda) a 1 (derecha) */
     drift: number;
+    /** Capa encendida. Va bajando por la pila conforme avanza el scroll. */
+    active: number;
 }) {
     const mountRef = useRef<HTMLDivElement>(null);
     const driftRef = useRef(drift);
     driftRef.current = drift;
+    const activeRef = useRef(active);
+    activeRef.current = active;
 
     useEffect(() => {
         const mount = mountRef.current;
@@ -144,12 +154,20 @@ export function StackModule3D({
 
         const totalHeight = SPECS.reduce((n, s) => n + s.height, 0);
         let cursor = -totalHeight / 2;
+        const dim = new THREE.Color(DIM);
+        // Color de la etapa activa. Se relee cada frame para que coincida con
+        // el titular: el encendido y el texto tienen que ir a juego.
+        const hot = new THREE.Color();
         const layers = SPECS.map((spec, i) => {
-            const built = buildLayer(spec, colors[i] ?? '#0FB9B1');
+            const built = buildLayer(spec, DIM);
             const assembled = cursor + spec.height / 2;
             cursor += spec.height + GAP_ASSEMBLED;
             rig.add(built.group);
-            return { ...built, assembled, spread: (i - SPECS.length / 2) * GAP_EXPLODED };
+            return {
+                ...built,
+                assembled,
+                spread: (i - SPECS.length / 2) * GAP_EXPLODED,
+            };
         });
 
         const resize = () => {
@@ -186,15 +204,29 @@ export function StackModule3D({
             // Giro continuo: no depende del scroll, por eso nunca se queda quieto
             if (!reduced) rig.rotation.y += delta * 0.28;
 
-            // Despiece ligado al scroll
-            for (const layer of layers) {
+            // Despiece ligado al scroll.
+            // Las capas se apilan de abajo arriba (la 0 es la de mas abajo), asi
+            // que hay que invertir el indice para que el encendido BAJE.
+            const lit = layers.length - 1 - activeRef.current;
+            const k = Math.min(delta * 4.5, 1);   // suavizado del cambio de color
+            hot.set(colors[activeRef.current] ?? '#0FB9B1');
+
+            for (let i = 0; i < layers.length; i++) {
+                const layer = layers[i];
                 layer.group.position.y = layer.assembled + layer.spread * p;
+
+                // Solo una capa encendida a la vez. Al cambiar de etapa el
+                // encendido baja por la pila y estrena color.
+                const material = layer.edges.material as THREE.LineBasicMaterial;
+                const target = i === lit ? hot : dim;
+                material.color.lerp(target, k);
+                material.opacity += ((i === lit ? HOT_OPACITY : DIM_OPACITY) - material.opacity) * k;
             }
 
             // Deriva lateral suavizada hacia el lado que toca
             driftCurrent += (driftRef.current - driftCurrent) * Math.min(delta * 3.2, 1);
-            shell.position.x = driftCurrent * 1.5;
-            shell.rotation.z = driftCurrent * -0.05;
+            shell.position.x = driftCurrent * 2.7;
+            shell.rotation.z = driftCurrent * -0.07;
 
             renderer.render(scene, camera);
         };

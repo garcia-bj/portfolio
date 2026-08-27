@@ -134,6 +134,27 @@ mientras el actual se va, en vez de un cambio brusco al saltar de modulo.
 
 El texto va siempre al lado contrario del objeto, asi que nunca se pisan.
 
+El recorrido importa: con 48 px de viaje el texto entrante parecia aparecer ahi
+mismo. `TRAVEL_IN` lo sube a 190 px y la opacidad entra **despues** que el
+movimiento, asi se lee como que llega desde abajo y no como un fundido.
+
+### La capa encendida
+
+`StackModule3D` recibe `active` y enciende **una sola capa**: la suya toma el
+color de la etapa y el resto se quedan en el trazo apagado (`DIM`).
+
+Dos detalles que ya costaron:
+
+- Las capas se apilan **de abajo arriba** (la 0 es la de mas abajo), asi que hay
+  que invertir el indice (`layers.length - 1 - active`) para que el encendido
+  **baje** conforme avanzas.
+- El color sale de `colors[active]`, **no** del indice de la capa. Con lo
+  segundo el titular decia azul y la capa se encendia ambar.
+
+Los colores de las categorias son un espectro contenido (petroleo -> cian ->
+azul -> verde -> lima -> ambar -> naranja -> coral). Si fueran todos del mismo
+verde, "el color baja pero a otro color" no se notaria.
+
 ### Verificar animaciones en el navegador
 
 Chrome **estrangula `requestAnimationFrame` en pestanas sin foco**. Dos capturas
