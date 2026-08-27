@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollProgressIndicator } from "@/components/ui/ScrollProgressIndicator";
+import { DotField } from "@/components/ui/DotField";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Syne } from "next/font/google";
@@ -71,6 +72,7 @@ export default function RootLayout({
         >
           Saltar al contenido
         </a>
+        <DotField />
         <ScrollProgressIndicator />
         <Navbar />
         {children}

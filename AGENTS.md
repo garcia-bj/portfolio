@@ -16,7 +16,7 @@ Personal portfolio site for Brandon Garcia (Full Stack Developer & AI Engineer).
 ## Stack & architecture
 
 - Next.js 16 (App Router, Turbopack) + React 19 + TypeScript (strict) + Tailwind CSS v4 + Framer Motion + anime.js v4.
-- Single-page site: `src/app/page.tsx` assembles section components from `src/components/sections/` (`Hero`, `Stats`, `Stack`, `Projects`, `Experience`, `Contact`), each wrapped in `<SectionReveal>`. Only routes are `/` and `/gracias`.
+- Single-page site: `src/app/page.tsx` assembles section components from `src/components/sections/` (`Hero`, `Stats`, `Stack`, `Projects`, `Experience`, `Contact`), each wrapped in `<SectionReveal>`. Only route is `/`.
 - `src/app/layout.tsx` owns the chrome: `Navbar`, `Footer`, `ScrollProgressIndicator` and the GA scripts. Note `<html lang="en">` while all copy is Spanish.
 - Path alias `@/*` → `./src/*`.
 - Projects data lives in `src/components/sections/constants.ts`, not fetched or in a DB. Anchor ids come from the `SectionId` enum in `src/types/index.ts` (used by the Navbar links).
@@ -31,6 +31,17 @@ Dos librerias, cada una en lo suyo:
   `data-reveal-item` escalonados en vez del contenedor.
 - **Framer Motion** para lo ligado al scroll de forma continua: el apilado
   sticky de `Projects`, el parallax del Hero, `TextReveal`, `ScrollProgressIndicator`.
+
+- **`DotField`** (`layout.tsx`) es el fondo de toda la web: una rejilla de
+  puntos que **no late en bucle, reacciona**. La onda nace del borde hacia el
+  que scrolleas (`from: 'first' | 'last'`) o de la celda bajo el cursor
+  (`from: fila * cols + col`). Asi no gasta un fotograma con la pagina quieta,
+  que importa porque el sitio ya carga cuatro lienzos de WebGL.
+  Dos trampas: los puntos van a opacidad 0.11 en reposo porque los canvas 3D
+  son `alpha: true` y el campo se ve **a traves** de ellos; y `animate()` de
+  anime.js v4 **no cancela lo anterior** sobre los mismos targets, hay que
+  llamar a `utils.remove(dots)` antes de cada onda o dos se pelean por el
+  mismo estilo.
 
 Otros componentes: `SectionHeading` (cabecera de seccion, revela el titular
 palabra por palabra sobre `Reveal`), `TextReveal` (frase que se ilumina ligada
@@ -278,7 +289,11 @@ Para regenerar:
 
 ## External integrations (hardcoded)
 
-- Contact form submits to Formspree via a plain HTML `action` (`https://formspree.io/f/mojeonpo`) in `src/components/sections/Contact.tsx`. The README incorrectly says "Netlify Forms". The `@formspree/react` `useForm`/`ValidationError` imports are unused — the form is a native POST.
+- **Ya no hay formulario de contacto.** Era un POST nativo a Formspree sin campo
+  `_next`, asi que al enviar sacaba al visitante del sitio a una pagina de
+  terceros. `Contact.tsx` son ahora los canales directos (WhatsApp, email) mas
+  GitHub. Se desinstalo `@formspree/react` y se borro la ruta `/gracias`, que
+  solo existia como destino del redirect.
 - Google Analytics is hardcoded in `src/app/layout.tsx` (G-0KDF54NSVZ) via `next/script`.
 
 ## Deploy

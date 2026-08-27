@@ -16,7 +16,7 @@ Portafolio profesional de alto rendimiento para **Full Stack Developer & AI Engi
 - 📱 **100% Responsive** — El apilado sticky se desactiva bajo `md`, donde no cabe
 - ♿ **Accesible** — Foco visible, `aria-label` en iconos y `prefers-reduced-motion` respetado
 - 🌙 **Dark Theme** — Paleta "Petrol Green" sobre fondo casi negro
-- 📧 **Formulario de Contacto** — Integrado con **Formspree**
+- 📧 **Contacto directo** — WhatsApp, email y GitHub, sin formulario
 
 ## 🛠 Tech Stack
 
@@ -29,7 +29,7 @@ Portafolio profesional de alto rendimiento para **Full Stack Developer & AI Engi
 | Animación de UI | Framer Motion (sticky/parallax ligados al scroll) |
 | Tipografía | Syne (display) + Geist Sans / Geist Mono |
 | Iconos | Lucide React, React Icons |
-| Formulario | Formspree |
+| Contacto | Enlaces directos |
 | Analítica | Google Analytics (GA4) |
 | Deploy | Netlify |
 
@@ -62,25 +62,6 @@ El proyecto incluye `netlify.toml` preconfigurado (`@netlify/plugin-nextjs`, Nod
 1. Conecta tu repo de GitHub a Netlify
 2. Netlify detecta la configuración automáticamente
 3. El build corre con `npm run build` y publica `.next`
-
-### Formulario de contacto (Formspree, no Netlify Forms)
-
-El formulario hace un `POST` nativo a Formspree desde
-`src/components/sections/Contact.tsx`:
-
-```
-action="https://formspree.io/f/mojeonpo"
-```
-
-Para gestionarlo o cambiar el destinatario, entra a [formspree.io](https://formspree.io)
-con la cuenta dueña de ese formulario.
-
-**Pendiente:** la página `/gracias` existe pero todavía no se usa. Formspree
-redirige ahí si añades un campo oculto con la URL absoluta del sitio:
-
-```html
-<input type="hidden" name="_next" value="https://TU-DOMINIO/gracias" />
-```
 
 ## 📂 Estructura
 
