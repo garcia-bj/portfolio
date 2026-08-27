@@ -27,7 +27,7 @@ export function Dragon() {
                     </div>
 
                     <p className="mt-4 max-w-md px-6 text-center font-mono text-[10px] uppercase leading-relaxed tracking-[0.22em] text-muted-foreground/50">
-                        18.000 puntos · 106 KB · sin esqueleto
+                        18.000 puntos · 159 KB · sin esqueleto ni texturas
                     </p>
                 </div>
             </div>

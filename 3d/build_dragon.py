@@ -31,6 +31,37 @@ SEED = 11
 SCALE = 3.0          # rango de cuantizacion Int16
 TARGET_HEIGHT = 2.6  # alto final en unidades de escena
 
+# Paleta por zonas. Se pinta con reglas de posicion: la malla viene de Meshy sin
+# materiales ni UVs, asi que no hay textura que muestrear. Los colores por
+# vertice no necesitan desenvolver nada.
+PALETTE = {
+    "roca":  (0.28, 0.34, 0.38),
+    "ala":   (0.16, 0.72, 0.68),
+    "vientre": (0.92, 0.82, 0.55),
+    "cuerpo": (0.95, 0.48, 0.16),
+}
+
+
+def zone_color(p, lo, hi):
+    """Decide el color de un punto por donde cae dentro del volumen."""
+    height = hi.z - lo.z
+    half_x = max(abs(lo.x), abs(hi.x))
+    t = (p.z - lo.z) / height if height else 0.0     # 0 pies, 1 cabeza
+
+    # La base rocosa: el quinto inferior
+    if t < 0.2:
+        return PALETTE["roca"]
+
+    # Alas: lejos del eje y por encima de la cintura
+    if abs(p.x) > half_x * 0.44 and t > 0.42:
+        return PALETTE["ala"]
+
+    # Vientre y pecho: la mitad delantera, franja media
+    if p.y < -0.08 and 0.3 < t < 0.78:
+        return PALETTE["vientre"]
+
+    return PALETTE["cuerpo"]
+
 
 def sample_surface(obj, total):
     """Reparte `total` puntos proporcionalmente al area de cada triangulo."""
@@ -64,6 +95,13 @@ def sample_surface(obj, total):
     return points
 
 
+def paint(points):
+    """Un color por punto. 3 bytes cada uno: 54 KB para los 18.000."""
+    lo = Vector((min(p.x for p in points), min(p.y for p in points), min(p.z for p in points)))
+    hi = Vector((max(p.x for p in points), max(p.y for p in points), max(p.z for p in points)))
+    return [zone_color(p, lo, hi) for p in points]
+
+
 def normalize(points):
     """Centra en X/Z, apoya en el suelo y escala a una altura conocida."""
     lo = Vector((min(p.x for p in points), min(p.y for p in points), min(p.z for p in points)))
@@ -74,7 +112,8 @@ def normalize(points):
     return [(p - center) * factor for p in points]
 
 
-def write_binary(points):
+def write_binary(points, colors):
+    """Posiciones Int16 primero, colores Uint8 despues, en el mismo archivo."""
     os.makedirs(os.path.dirname(BIN_PATH), exist_ok=True)
     with open(BIN_PATH, "wb") as f:
         buffer = bytearray()
@@ -85,12 +124,17 @@ def write_binary(points):
                 buffer += struct.pack("<h", q)
         f.write(buffer)
 
+        buffer = bytearray()
+        for r, g, b in colors:
+            buffer += bytes((int(r * 255), int(g * 255), int(b * 255)))
+        f.write(buffer)
+
     size = os.path.getsize(BIN_PATH)
     os.makedirs(os.path.dirname(META_PATH), exist_ok=True)
     with open(META_PATH, "w", encoding="utf-8") as f:
         json.dump(
             {"count": len(points), "scale": SCALE, "file": "/3d/dragon.bin",
-             "height": TARGET_HEIGHT},
+             "height": TARGET_HEIGHT, "colored": True},
             f, separators=(",", ":"),
         )
     return size
@@ -106,7 +150,8 @@ def main():
         points += sample_surface(obj, TARGET_POINTS)
 
     points = normalize(points)
-    size = write_binary(points)
+    colors = paint(points)
+    size = write_binary(points, colors)
     print(f"[ok] {len(points)} puntos -> {round(size / 1024)} KB")
 
 

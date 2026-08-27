@@ -18,11 +18,13 @@ import meta from '@/data/dragon.json';
  * el shader. Riggear esta malla habria costado dias; esto son 40 lineas.
  */
 
-const COLOR_NEAR = new THREE.Color('#7CF5DF');
-const COLOR_FAR = new THREE.Color('#0A5F58');
+// El color ya no es uniforme: cada punto trae el suyo, pintado por zonas en
+// Blender. `COLOR_FAR` solo se usa para la niebla de profundidad.
+const COLOR_FAR = new THREE.Color('#07332F');
 
 const VERTEX = /* glsl */ `
     attribute vec3 aChaos;
+    attribute vec3 aColor;
     attribute float aSeed;
 
     uniform float uTime;
@@ -31,8 +33,10 @@ const VERTEX = /* glsl */ `
 
     varying float vDepth;
     varying float vSeed;
+    varying vec3 vColor;
 
     void main() {
+        vColor = aColor;
         // Cada punto llega a su sitio a su ritmo: el retardo por semilla es lo
         // que hace que se ensamble en oleadas y no de golpe
         float local = clamp((uAssemble - aSeed * 0.35) / 0.65, 0.0, 1.0);
@@ -58,25 +62,25 @@ const VERTEX = /* glsl */ `
 `;
 
 const FRAGMENT = /* glsl */ `
-    uniform vec3 uColorNear;
     uniform vec3 uColorFar;
 
     varying float vDepth;
     varying float vSeed;
+    varying vec3 vColor;
 
     void main() {
         vec2 offset = gl_PointCoord - 0.5;
         float dist = length(offset);
         if (dist > 0.5) discard;
 
-        float alpha = smoothstep(0.5, 0.06, dist) * 0.55;
+        float alpha = smoothstep(0.5, 0.06, dist) * 0.6;
 
         // Niebla por profundidad: da volumen a algo que no tiene sombreado
         float fog = clamp((vDepth - 4.0) / 8.0, 0.0, 1.0);
-        vec3 color = mix(uColorNear, uColorFar, fog);
-        color += step(0.97, fract(vSeed * 91.7)) * 0.4;
+        vec3 color = mix(vColor, uColorFar, fog * 0.75);
+        color += step(0.97, fract(vSeed * 91.7)) * 0.35;
 
-        gl_FragColor = vec4(color, alpha * (1.0 - fog * 0.6));
+        gl_FragColor = vec4(color, alpha * (1.0 - fog * 0.55));
     }
 `;
 
@@ -109,11 +113,14 @@ export function DragonScene({ progress }: { progress: MotionValue<number> }) {
                 renderer.domElement.style.height = '100%';
                 renderer.domElement.style.display = 'block';
 
-                const raw = new Int16Array(buffer);
                 const count = meta.count;
+                // El binario lleva las posiciones (Int16) y luego los colores (Uint8)
+                const raw = new Int16Array(buffer, 0, count * 3);
+                const rgb = new Uint8Array(buffer, count * 3 * 2, count * 3);
 
                 const positions = new Float32Array(count * 3);
                 const chaos = new Float32Array(count * 3);
+                const colors = new Float32Array(count * 3);
                 const seeds = new Float32Array(count);
 
                 for (let i = 0; i < count; i++) {
@@ -131,12 +138,17 @@ export function DragonScene({ progress }: { progress: MotionValue<number> }) {
                     chaos[o + 1] = Math.cos(phi) * r * 0.7;
                     chaos[o + 2] = Math.sin(phi) * Math.sin(theta) * r;
 
+                    colors[o] = rgb[o] / 255;
+                    colors[o + 1] = rgb[o + 1] / 255;
+                    colors[o + 2] = rgb[o + 2] / 255;
+
                     seeds[i] = Math.random();
                 }
 
                 const geometry = new THREE.BufferGeometry();
                 geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
                 geometry.setAttribute('aChaos', new THREE.BufferAttribute(chaos, 3));
+                geometry.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
                 geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1));
 
                 const material = new THREE.ShaderMaterial({
@@ -146,7 +158,6 @@ export function DragonScene({ progress }: { progress: MotionValue<number> }) {
                         uTime: { value: 0 },
                         uSize: { value: 0.58 },
                         uAssemble: { value: 0 },
-                        uColorNear: { value: COLOR_NEAR },
                         uColorFar: { value: COLOR_FAR },
                     },
                     transparent: true,
