@@ -303,6 +303,13 @@ Para regenerar:
   solo existia como destino del redirect.
 - Google Analytics is hardcoded in `src/app/layout.tsx` (G-0KDF54NSVZ) via `next/script`.
 
+## El CV
+
+`cv/cv.html` es la fuente; el PDF publicado es `public/CV_Brandon Garcia.pdf`.
+Se genera con Chrome headless — ver `cv/README.md` para el comando y las tres
+trampas (la bandera del pie es `--no-pdf-header-footer`, la ruta de salida
+tiene que ser absoluta, y hay que servirlo por HTTP y no por `file://`).
+
 ## Deploy
 
 - Netlify: `netlify.toml` sets `publish = ".next"` and uses `@netlify/plugin-nextjs`. No serverless functions or edge runtime.

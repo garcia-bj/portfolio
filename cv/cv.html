@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>CV — Brandon Jr. Garcia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:      #14201f;
+    --body:     #3d4a49;
+    --soft:     #6b7877;
+    --accent:   #0c8f89;
+    --rule:     #d9e0df;
+  }
+
+  @page { size: A4; margin: 12mm 13mm; }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Geist', 'Segoe UI', system-ui, sans-serif;
+    font-size: 9.1pt;
+    line-height: 1.38;
+    color: var(--body);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------------------------------------------------- cabecera */
+  .top {
+    font-size: 7.6pt;
+    letter-spacing: 0.045em;
+    color: var(--soft);
+    padding-bottom: 5px;
+    line-height: 1.5;
+  }
+  .top span { white-space: nowrap; }
+  .sep { color: var(--rule); padding: 0 6px; }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 27pt;
+    line-height: 1;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+    margin-top: 9px;
+  }
+  .role {
+    font-size: 9.4pt;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+    margin-top: 5px;
+  }
+  .summary {
+    margin-top: 9px;
+    text-align: justify;
+    color: var(--body);
+  }
+
+  /* ---------------------------------------------------- secciones */
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 9.2pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 13px 0 7px;
+    padding-bottom: 4px;
+    border-bottom: 1.6px solid var(--accent);
+  }
+
+  .entry { margin-bottom: 8px; break-inside: avoid; }
+  .entry:last-child { margin-bottom: 0; }
+
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .entry-title {
+    font-weight: 600;
+    font-size: 9.9pt;
+    color: var(--ink);
+  }
+  .entry-org { color: var(--accent); font-weight: 500; }
+  .entry-date {
+    font-size: 7.7pt;
+    color: var(--soft);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .entry-note {
+    font-size: 8.4pt;
+    color: var(--soft);
+    margin-top: 1px;
+  }
+
+  ul { list-style: none; margin-top: 4px; }
+  li {
+    position: relative;
+    padding-left: 11px;
+    margin-bottom: 2px;
+  }
+  li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 3.5px;
+    height: 3.5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------------------------------------------------- habilidades */
+  .skill {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 10px;
+    padding: 3.5px 0;
+    border-bottom: 1px solid var(--rule);
+    break-inside: avoid;
+  }
+  .skill:last-child { border-bottom: 0; }
+  .skill dt {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 8.6pt;
+  }
+  .skill dd { color: var(--body); font-size: 8.7pt; }
+
+  /* ---------------------------------------------------- dos columnas */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 26px;
+  }
+  .tagline { color: var(--soft); font-size: 8.5pt; }
+
+  /* un titulo nunca se queda solo al pie de pagina */
+  h2 { break-after: avoid; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <span>+591 76990526</span><span class="sep">|</span><span>garciacussi7@gmail.com</span><span class="sep">|</span><span>Cochabamba, Bolivia</span><br>
+  <span>garciacussi.com</span><span class="sep">|</span><span>linkedin.com/in/brandon-junior-garcia-cussi</span><span class="sep">|</span><span>github.com/garcia-bj</span>
+</div>
+
+<h1>Brandon Jr. Garcia</h1>
+<p class="role">Ingeniero de Software &middot; AI Engineer &middot; Agentes Autónomos y Sistemas RAG</p>
+
+<p class="summary">
+  Ingeniero de Software y AI Engineer especializado en <b>agentes autónomos multicanal</b> y sistemas de
+  Recuperación Aumentada por Generación (RAG) en producción. Diseño arquitecturas multitenant bajo Modelo C4,
+  pipelines de recuperación vectorial de baja latencia y automatizaciones que sustituyen procesos manuales
+  completos. Integraciones de nivel empresarial sobre el ecosistema Meta —WhatsApp, Instagram y Messenger—
+  desde una única orquestación. Capacidad probada para liderar el ciclo de vida completo del desarrollo (SDLC)
+  bajo metodologías ágiles (SCRUM), con uso avanzado de Python, LangGraph, n8n y desarrollo asistido por
+  agentes (Claude Code, MCP).
+</p>
+
+<h2>Experiencia Laboral</h2>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Founder &amp; AI Engineer <span class="entry-org">— ASC (Agent Service Client)</span></span>
+    <span class="entry-date">Marzo 2025 – Actualidad</span>
+  </div>
+  <ul>
+    <li><b>Liderazgo técnico:</b> dirijo el diseño y desarrollo de una infraestructura SaaS multitenant basada en microservicios para el despliegue masivo de agentes inteligentes autónomos.</li>
+    <li><b>Multicanal Meta:</b> agentes operando sobre WhatsApp Business API, Instagram Graph API y Messenger Platform desde una única orquestación, con Meta Cloud API como capa común.</li>
+    <li><b>Ingeniería de datos:</b> diseño y optimizo pipelines vectoriales con Qdrant y Supabase, logrando recuperación de información con baja latencia para sistemas RAG.</li>
+    <li><b>Orquestación agéntica:</b> flujos cíclicos con LangGraph para toma de decisiones autónoma y memoria persistente entre conversaciones.</li>
+    <li><b>Automatización de CX:</b> lógica de negocio para la cualificación automática de leads, integrando LLMs con herramientas de mensajería para escalar la atención al cliente.</li>
+    <li><b>Arquitectura C4:</b> diseño de infraestructura multitenant documentada por niveles, del contexto al componente.</li>
+  </ul>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Lead Full Stack Developer <span class="entry-org">— Carguita</span></span>
+    <span class="entry-date">Enero 2025 – Actualidad</span>
+  </div>
+  <ul>
+    <li><b>Arquitectura de software:</b> supervisé la transición de una aplicación monolítica a una arquitectura escalable, mejorando la disponibilidad del sistema en un 30%.</li>
+    <li><b>Tiempo real:</b> geolocalización con algoritmos de geofencing y tracking mediante WebSockets, para control de flotas de múltiples tipos de transporte.</li>
+    <li><b>Gestión de infraestructura:</b> administro entornos de producción con Docker y Dokploy, implementando pipelines de CI/CD que redujeron los tiempos de despliegue.</li>
+    <li><b>Optimización de backend:</b> refactoricé servicios críticos en Python y Nest.js, mejorando la eficiencia del procesamiento de datos de geolocalización.</li>
+  </ul>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Desarrollador &amp; Automatizador <span class="entry-org">— TECPROCOM Bolivia</span></span>
+    <span class="entry-date">Marzo 2023 – Marzo 2025</span>
+  </div>
+  <ul>
+    <li><b>Automatización de procesos:</b> diseñé flujos de trabajo con n8n que automatizaron el 90% de las consultas frecuentes, reduciendo la carga operativa del equipo de soporte.</li>
+    <li><b>Desarrollo full-stack:</b> implementé soluciones e-commerce y sistemas de agendamiento personalizados con APIs de terceros.</li>
+    <li><b>Gestión de APIs:</b> integré Evolution API para flujos masivos de WhatsApp, asegurando la escalabilidad de la comunicación corporativa.</li>
+  </ul>
+</div>
+
+<h2>Proyectos Destacados</h2>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Ecosistema RAG Multimodal &amp; MCP</span>
+    <span class="entry-date">AI Engineer</span>
+  </div>
+  <div class="entry-note">Sistema capaz de procesar documentos técnicos, tablas y diagramas complejos mediante modelos de visión.</div>
+  <ul>
+    <li><b>Visión e IA:</b> procesamiento avanzado con GPT-4o y Claude 3.5 Sonnet sobre documentación no estructurada.</li>
+    <li><b>Interoperabilidad:</b> implementación de Model Context Protocol (MCP) para exponer el motor a agentes locales.</li>
+  </ul>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">De-Vega Resto-Bar <span class="entry-org">— Menús con IA</span></span>
+    <span class="entry-date">Full Stack &amp; AI Engineer</span>
+  </div>
+  <div class="entry-note">Aplicación web de creación y edición de imágenes con IA para generar menús personalizados de restaurante.</div>
+  <ul>
+    <li><b>IA generativa:</b> creación y edición de imágenes asistida por modelo para composición de menús.</li>
+    <li><b>Autopublicación:</b> publicación automática como post e historia en Instagram y Facebook.</li>
+    <li><b>Almacenamiento:</b> gestión de assets con MinIO.</li>
+  </ul>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Genuino Importaciones <span class="entry-org">— Web y embudo de ventas</span></span>
+    <span class="entry-date">Full Stack &amp; Automation Engineer</span>
+  </div>
+  <div class="entry-note">Sitio web corporativo y formulario inteligente de embudos de venta con cualificación automática.</div>
+  <ul>
+    <li><b>Formulario inteligente:</b> filtrado y priorización automática de leads según criterios de negocio.</li>
+    <li><b>Asignación:</b> designación y notificación automática al asesor comercial correspondiente, orquestado con n8n.</li>
+  </ul>
+</div>
+
+<h2>Habilidades Técnicas</h2>
+
+<dl>
+  <div class="skill">
+    <dt>IA &amp; Machine Learning</dt>
+    <dd>LangChain, LangGraph, Pydantic AI, OpenAI API, Anthropic Claude API, OpenRouter. Agentes autónomos (agentic workflows), RAG avanzado, IA multimodal, prompt engineering, fine-tuning básico.</dd>
+  </div>
+  <div class="skill">
+    <dt>Tooling Agéntico</dt>
+    <dd>Claude Code, OpenCode, Model Context Protocol (MCP), Skills, subagentes. Desarrollo asistido por agentes sobre bases de código reales.</dd>
+  </div>
+  <div class="skill">
+    <dt>Ecosistema Meta</dt>
+    <dd>Meta Cloud API, WhatsApp Business API, Instagram Graph API, Messenger Platform, Facebook Graph API. Agentes multicanal desde una orquestación única.</dd>
+  </div>
+  <div class="skill">
+    <dt>Backend</dt>
+    <dd>Python (avanzado), Node.js, NestJS, FastAPI, TypeScript, JavaScript (ES6+). APIs REST, webhooks, microservicios y arquitecturas event-driven.</dd>
+  </div>
+  <div class="skill">
+    <dt>Frontend</dt>
+    <dd>React, Next.js, Vue.js, TypeScript, Tailwind CSS. Diseño responsivo (mobile first) y accesibilidad web.</dd>
+  </div>
+  <div class="skill">
+    <dt>Bases de Datos</dt>
+    <dd>PostgreSQL, Supabase, MongoDB, Redis. Vectoriales: Qdrant, Supabase Vector, Pinecone.</dd>
+  </div>
+  <div class="skill">
+    <dt>DevOps &amp; Cloud</dt>
+    <dd>Docker, Kubernetes, GitHub Actions, pipelines CI/CD, Google Cloud, Dokploy, Nginx. Almacenamiento de objetos: MinIO, RUSTFS.</dd>
+  </div>
+  <div class="skill">
+    <dt>Automatización</dt>
+    <dd>n8n, Evolution API, webhooks y flujos de negocio end-to-end. Git, Linux, VSCode, Pydantic.</dd>
+  </div>
+  <div class="skill">
+    <dt>Arquitectura</dt>
+    <dd>Modelo C4, diseño multitenant, principios SOLID, gestión de proyectos con SCRUM.</dd>
+  </div>
+</dl>
+
+<h2>Educación y Formación</h2>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Ingeniería de Sistemas <span class="entry-org">— Universidad Mayor de San Simón (UMSS)</span></span>
+    <span class="entry-date">En curso</span>
+  </div>
+  <div class="entry-note">Estudiante de últimos semestres.</div>
+</div>
+
+<div class="entry">
+  <div class="entry-head">
+    <span class="entry-title">Bachiller en Humanidades <span class="entry-org">— Colegio Mallco Rancho</span></span>
+    <span class="entry-date">2020</span>
+  </div>
+</div>
+
+<h2>Certificaciones Técnicas</h2>
+<ul>
+  <li><b>AI Engineer — Agentic Track:</b> The Complete Agent &amp; MCP Course. Especialización en Model Context Protocol y agentes autónomos.</li>
+  <li><b>AI Engineer — Core Track:</b> LLM Engineering, RAG, QLoRA &amp; Agents. Especialización en ingeniería de modelos y optimización.</li>
+  <li><b>Full Stack Generative and Agentic AI with Python:</b> desarrollo integral de aplicaciones de IA generativa.</li>
+</ul>
+
+<div class="cols">
+  <div>
+    <h2>Idiomas</h2>
+    <ul>
+      <li><b>Español:</b> nativo.</li>
+      <li><b>Inglés:</b> técnico (lectura y documentación).</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Competencias</h2>
+    <ul>
+      <li>Liderazgo técnico y mentoría.</li>
+      <li>Resolución de problemas y comunicación efectiva.</li>
+      <li>Autonomía y aprendizaje continuo.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
