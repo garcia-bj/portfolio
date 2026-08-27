@@ -1,6 +1,5 @@
 import Hero from '@/components/sections/Hero';
 import { Stats } from '@/components/sections/Stats';
-import { AiCore } from '@/components/sections/AiCore';
 import { TechStack } from '@/components/sections/Stack';
 import Projects from '@/components/sections/Projects';
 import { Experience } from '@/components/sections/Experience';
@@ -15,7 +14,6 @@ export default function Home() {
     <main className="min-h-screen bg-background text-foreground">
       <Hero />
       <Stats />
-      <AiCore />
       <TechStack />
       <Projects />
       <Experience />

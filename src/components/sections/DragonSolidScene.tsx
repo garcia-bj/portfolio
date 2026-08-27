@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { MotionValue } from 'framer-motion';
+import { createDragRotate } from './dragRotate';
 
 /**
  * El dragon como malla solida. El contraste del experimento.
@@ -99,18 +100,27 @@ export function DragonSolidScene({ progress }: { progress: MotionValue<number> }
         );
         visibility.observe(mount);
 
+        const drag = createDragRotate(mount);
         const start = performance.now();
+        let last = start;
 
         const tick = (now: number) => {
             raf = requestAnimationFrame(tick);
+            const delta = Math.min((now - last) / 1000, 0.05);
+            last = now;
             if (!visible) return;
 
             const elapsed = (now - start) / 1000;
             const p = progress.get();
 
+            // Giro automatico + lo que arrastre el usuario. Fuera del `if`:
+            // el arrastre debe seguir vivo aunque el modelo aun no haya cargado.
+            drag.update(delta);
+            const auto = reduced ? -0.5 : -0.5 + Math.sin(elapsed * 0.14) * 0.55;
+            rig.rotation.y = auto + drag.offset.y;
+            rig.rotation.x = drag.offset.x;
+
             if (model) {
-                // Mismo movimiento que la nube, para que la comparacion sea justa
-                if (!reduced) rig.rotation.y = -0.5 + Math.sin(elapsed * 0.14) * 0.55;
                 const entrance = Math.min(1, p * 2.6);
                 rig.scale.setScalar(0.3 + entrance * 0.7);
                 model.position.y = -1.25 + (1 - entrance) * 0.8;
@@ -123,6 +133,7 @@ export function DragonSolidScene({ progress }: { progress: MotionValue<number> }
         return () => {
             disposed = true;
             cancelAnimationFrame(raf);
+            drag.dispose();
             sizeObserver.disconnect();
             visibility.disconnect();
             model?.traverse((child) => {

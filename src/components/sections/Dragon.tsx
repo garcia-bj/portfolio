@@ -43,6 +43,9 @@ export function Dragon() {
                         <div className="flex items-center gap-3">
                             <span className="h-px w-8 bg-primary/60" />
                             <span className="eyebrow">Mismo modelo, dos técnicas</span>
+                            <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40">
+                                arrastra para girar
+                            </span>
                         </div>
 
                         <div className="mt-8 grid gap-6 md:grid-cols-2">

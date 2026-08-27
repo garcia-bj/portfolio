@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { MotionValue } from 'framer-motion';
 import meta from '@/data/dragon.json';
+import { createDragRotate } from './dragRotate';
 
 /**
  * El dragon como nube de puntos.
@@ -188,10 +189,14 @@ export function DragonScene({ progress }: { progress: MotionValue<number> }) {
                 );
                 visibility.observe(mount);
 
+                const drag = createDragRotate(mount);
                 const start = performance.now();
+                let last = start;
 
                 const tick = (now: number) => {
                     raf = requestAnimationFrame(tick);
+                    const delta = Math.min((now - last) / 1000, 0.05);
+                    last = now;
                     if (!visible) return;
 
                     const elapsed = (now - start) / 1000;
@@ -201,13 +206,18 @@ export function DragonScene({ progress }: { progress: MotionValue<number> }) {
                     // Se arma en el primer tercio y se queda
                     material.uniforms.uAssemble.value = Math.min(1, p * 2.6);
 
-                    if (!reduced) rig.rotation.y = -0.5 + Math.sin(elapsed * 0.14) * 0.55;
+                    // Giro automatico + lo que arrastre el usuario
+                    drag.update(delta);
+                    const auto = reduced ? -0.5 : -0.5 + Math.sin(elapsed * 0.14) * 0.55;
+                    rig.rotation.y = auto + drag.offset.y;
+                    rig.rotation.x = drag.offset.x;
 
                     renderer.render(scene, camera);
                 };
                 raf = requestAnimationFrame(tick);
 
                 cleanup = () => {
+                    drag.dispose();
                     sizeObserver.disconnect();
                     visibility.disconnect();
                     geometry.dispose();
