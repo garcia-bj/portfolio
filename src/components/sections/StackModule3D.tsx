@@ -50,7 +50,10 @@ const LINE_WIDTH = 2.2;
 const LINE_WIDTH_HOT = 3.4;
 
 const GAP_ASSEMBLED = 0.06;
-const GAP_EXPLODED = 0.52;
+const GAP_EXPLODED = 0.46;
+/** La camara retrocede segun se despieza: si no, el modulo abierto no cabe. */
+const CAMERA_Z = 11.5;
+const CAMERA_Z_OPEN = 15.4;
 const EDGE_THRESHOLD = 28;   // grados: por debajo, la arista no se dibuja
 /** Color del relleno opaco que oculta las lineas traseras. Es el fondo del sitio. */
 const OCCLUDER = '#010505';
@@ -233,6 +236,13 @@ export function StackModule3D({
 
             // Giro continuo: no depende del scroll, por eso nunca se queda quieto
             if (!reduced) rig.rotation.y += delta * 0.28;
+
+            // La camara acompana el despiece para que el modulo no se salga
+            // por arriba y por abajo cuando esta del todo abierto.
+            const zoom = CAMERA_Z + (CAMERA_Z_OPEN - CAMERA_Z) * p;
+            if (Math.abs(camera.position.z - zoom) > 0.001) {
+                camera.position.z = zoom;
+            }
 
             // Despiece ligado al scroll.
             // Las capas se apilan de abajo arriba (la 0 es la de mas abajo), asi

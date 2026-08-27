@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Decodificador Draco de three.js: minificado de terceros, no es codigo nuestro
+    "public/draco/**",
   ]),
 ]);
 

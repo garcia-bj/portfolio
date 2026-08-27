@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
+import type { MotionValue } from 'framer-motion';
 import { animate, stagger } from 'animejs';
 import { StackModule3D } from './StackModule3D';
 import {
@@ -331,7 +332,7 @@ function ModuleCopy({
             </span>
 
             <h3
-                className="mt-5 font-display text-[clamp(2rem,4vw,3.5rem)] font-extrabold leading-[0.95]"
+                className="mt-5 break-words font-display text-[clamp(1.75rem,3.4vw,3rem)] font-extrabold leading-[0.95]"
                 style={{ color: category.color }}
             >
                 {category.title}
@@ -345,6 +346,54 @@ function ModuleCopy({
 
             <ModuleTechs category={category} align={align} />
         </div>
+    );
+}
+
+/**
+ * Un bloque de copy por categoria. Todos existen siempre; cada uno calcula su
+ * propia opacidad desde el progreso continuo.
+ *
+ * Antes se renderizaban solo dos (el actual y el siguiente) con `key` por id.
+ * Al cambiar de etapa React remontaba el bloque entrante y su MotionValue
+ * llegaba **con un fotograma de retraso**: el texto asomaba a opacidad plena y
+ * desaparecia de golpe. Con todos montados no hay remontaje ni valor obsoleto.
+ */
+function ModuleSlot({
+    raw,
+    index,
+    category,
+    total,
+}: {
+    raw: MotionValue<number>;
+    index: number;
+    category: Category;
+    total: number;
+}) {
+    const align: 'left' | 'right' = DRIFT[index % DRIFT.length] > 0 ? 'left' : 'right';
+
+    const opacity = useTransform(raw, (v: number) => {
+        const d = v - index;
+        if (d <= -1 || d >= 1) return 0;
+        // Entrando: la opacidad arranca despues que el movimiento, asi el texto
+        // ya viene subiendo cuando empieza a verse.
+        if (d < 0) return smoothstep(FADE_START - 0.84, 0, d);
+        return 1 - smoothstep(FADE_START, 0.94, d);
+    });
+
+    const y = useTransform(raw, (v: number) => {
+        const d = v - index;
+        if (d < 0) return (1 - smoothstep(FADE_START - 1, 0, d)) * TRAVEL_IN;
+        return -smoothstep(FADE_START, 1, d) * TRAVEL_OUT;
+    });
+
+    return (
+        <motion.div
+            style={{ opacity, y }}
+            className={`pointer-events-none absolute inset-x-0 top-0 max-w-[22rem] md:max-w-lg ${align === 'right' ? 'ml-auto' : ''
+                }`}
+        >
+            <ModuleCopy category={category} index={index} total={total} align={align} />
+        </motion.div>
     );
 }
 
@@ -364,16 +413,10 @@ export function TechStack() {
     });
 
     const current = categories[active];
-    const next = categories[Math.min(active + 1, categories.length - 1)];
-    const driftStep = DRIFT[active % DRIFT.length];
-    const align: 'left' | 'right' = driftStep > 0 ? 'left' : 'right';
-    const nextDrift = DRIFT[(active + 1) % DRIFT.length];
-    const nextAlign: 'left' | 'right' = nextDrift > 0 ? 'left' : 'right';
 
     // Relevo de textos ligado al scroll: el saliente se va mientras el entrante
     // ya esta llegando, en vez de cambiar de golpe al saltar de indice.
     const raw = useTransform(scrollYProgress, (p) => p * categories.length);
-    const frac = useTransform(raw, (v) => v - Math.floor(v));
 
     // Deriva continua: el cilindro empieza a cruzar en el mismo instante en que
     // el texto arranca su relevo, y llega a la vez que el titular nuevo.
@@ -385,14 +428,6 @@ export function TechStack() {
         return from + (to - from) * f;
     });
 
-    const outOpacity = useTransform(frac, (f) => 1 - smoothstep(FADE_START, 0.94, f));
-    const outY = useTransform(frac, (f) => -smoothstep(FADE_START, 1, f) * TRAVEL_OUT);
-    // La opacidad entra despues que el movimiento: el texto ya viene subiendo
-    // cuando empieza a hacerse visible, y por eso se lee como que "llega".
-    const inOpacity = useTransform(frac, (f) => smoothstep(FADE_START + 0.16, 1, f));
-    const inY = useTransform(frac, (f) => (1 - smoothstep(FADE_START, 1, f)) * TRAVEL_IN);
-
-    const isLast = active === categories.length - 1;
 
     return (
         <section id={SectionId.STACK} className="relative">
@@ -434,42 +469,22 @@ export function TechStack() {
 
                         {/* Velo bajo el texto: en movil el 3D pasa por detras */}
                         <div
-                            className={`pointer-events-none absolute inset-y-0 w-full max-w-xl bg-gradient-to-r from-background via-background/85 to-transparent md:max-w-2xl ${align === 'right' ? 'right-0 rotate-180' : 'left-0'
+                            className={`pointer-events-none absolute inset-y-0 w-full max-w-xl bg-gradient-to-r from-background via-background/85 to-transparent transition-all duration-500 md:max-w-2xl ${DRIFT[active % DRIFT.length] > 0 ? 'left-0' : 'right-0 rotate-180'
                                 }`}
                         />
 
                         <div className="relative z-10 flex h-full items-center">
                             <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
                                 <div className="relative h-[26rem] md:h-[24rem]">
-                                    <motion.div
-                                        key={current.id}
-                                        style={{ opacity: outOpacity, y: outY }}
-                                        className={`absolute inset-x-0 top-0 max-w-[22rem] md:max-w-sm ${align === 'right' ? 'ml-auto' : ''
-                                            }`}
-                                    >
-                                        <ModuleCopy
-                                            category={current}
-                                            index={active}
+                                    {categories.map((category, i) => (
+                                        <ModuleSlot
+                                            key={category.id}
+                                            raw={raw}
+                                            index={i}
+                                            category={category}
                                             total={categories.length}
-                                            align={align}
                                         />
-                                    </motion.div>
-
-                                    {!isLast && (
-                                        <motion.div
-                                            key={`${next.id}-next`}
-                                            style={{ opacity: inOpacity, y: inY }}
-                                            className={`absolute inset-x-0 top-0 max-w-[22rem] md:max-w-sm ${nextAlign === 'right' ? 'ml-auto' : ''
-                                                }`}
-                                        >
-                                            <ModuleCopy
-                                                category={next}
-                                                index={active + 1}
-                                                total={categories.length}
-                                                align={nextAlign}
-                                            />
-                                        </motion.div>
-                                    )}
+                                    ))}
                                 </div>
                             </div>
                         </div>

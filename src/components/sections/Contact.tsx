@@ -5,6 +5,7 @@ import { SiWhatsapp, SiGmail, SiGooglemaps } from 'react-icons/si';
 import { ArrowUpRight } from 'lucide-react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Reveal } from '@/components/ui/Reveal';
+import { StaggerGrid } from '@/components/ui/StaggerGrid';
 
 const channels = [
     { Icon: SiGmail, label: 'Email', value: 'garciacussi7@gmail.com', href: 'mailto:garciacussi7@gmail.com' },
@@ -26,6 +27,9 @@ export function Contact() {
     return (
         <section id="contact" className="relative overflow-hidden py-32">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/[0.07] blur-[130px]" />
+
+            {/* Rejilla de anime.js: late sola y responde al cursor */}
+            <StaggerGrid className="absolute inset-x-0 top-0 h-[46vh] gap-y-6 [mask-image:linear-gradient(to_bottom,black,transparent)]" />
 
             <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-10">
                 <SectionHeading
