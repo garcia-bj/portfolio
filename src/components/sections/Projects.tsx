@@ -52,18 +52,17 @@ function ProjectCard({
                     {/* Imagen */}
                     <div className={`relative min-h-[220px] overflow-hidden ${flip ? 'md:order-2' : ''}`}>
                         {isLogo ? (
-                            /* Un logo de marca no se recorta a sangre: se presenta.
-                               Ademas el de Genuino es negro y desapareceria sobre
-                               el fondo oscuro, de ahi la placa clara. */
-                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/[0.07] to-secondary/[0.05] p-10">
-                                <div className="flex w-full max-w-[15rem] items-center justify-center rounded-2xl bg-white p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.9)]">
-                                    <img
-                                        src={project.image}
-                                        alt={project.title}
-                                        loading="lazy"
-                                        className="h-auto w-full object-contain"
-                                    />
-                                </div>
+                            /* Los proyectos sin captura llenan igual su mitad: la
+                               lamina clara ocupa el hueco entero, no una tarjetita
+                               flotando en negro. Clara porque el logo de Genuino es
+                               negro y sobre el fondo oscuro desapareceria. */
+                            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_32%_22%,#FFFFFF_0%,#F1EEE8_55%,#E2DDD3_100%)] p-10 md:p-14">
+                                <img
+                                    src={project.image}
+                                    alt={project.title}
+                                    loading="lazy"
+                                    className="max-h-[70%] w-auto max-w-[80%] object-contain"
+                                />
                             </div>
                         ) : (
                             <>
@@ -79,7 +78,10 @@ function ProjectCard({
                                 />
                             </>
                         )}
-                        <span className="absolute left-6 top-6 font-display text-6xl font-extrabold leading-none text-foreground/15">
+                        <span
+                            className={`absolute left-6 top-6 font-display text-6xl font-extrabold leading-none ${isLogo ? 'text-black/10' : 'text-foreground/15'
+                                }`}
+                        >
                             {String(index + 1).padStart(2, '0')}
                         </span>
                     </div>

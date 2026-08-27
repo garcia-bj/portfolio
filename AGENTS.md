@@ -20,9 +20,11 @@ Personal portfolio site for Brandon Garcia (Full Stack Developer & AI Engineer).
 - `src/app/layout.tsx` owns the chrome: `Navbar`, `Footer`, `ScrollProgressIndicator` and the GA scripts. Note `<html lang="en">` while all copy is Spanish.
 - Path alias `@/*` → `./src/*`.
 - Projects data lives in `src/components/sections/constants.ts`, not fetched or in a DB.
-  Un proyecto con `logo: true` no pinta su imagen a sangre: la centra sobre una
-  placa blanca (`Projects.tsx`). Hace falta porque el logo de Genuino es negro y
-  desapareceria sobre el fondo oscuro.
+  Todas las tarjetas llenan su mitad de imagen. Un proyecto con `logo: true` no
+  tiene captura, asi que esa mitad pasa a ser una lamina clara a sangre con el
+  logo centrado (`Projects.tsx`) — clara porque el de Genuino es negro y sobre
+  el fondo oscuro desapareceria. El numero de orden cambia a `text-black/10`
+  ahi, o no se ve.
 - Las redes salen de `src/components/sections/socials.ts`, unica fuente para
   Hero, Contact y Footer. Anchor ids come from the `SectionId` enum in `src/types/index.ts` (used by the Navbar links).
 
