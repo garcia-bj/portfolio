@@ -48,53 +48,54 @@ SEED = 7
 # --------------------------------------------------------------------------
 
 BLOBS = [
-    # Craneo y morro: el morro alargado ya insinua hocico de reptil
-    (0.00, -0.10, 1.80, 0.36),
-    (0.00, -0.32, 1.72, 0.28),
-    (0.00, -0.52, 1.66, 0.20),
-    (0.00, -0.66, 1.62, 0.13),
-    # Mandibula, un poco por debajo
-    (0.00, -0.42, 1.55, 0.17),
+    # Craneo: mas plano y alargado que redondo, con mandibula marcada
+    (0.00, -0.14, 2.32, 0.26),
+    (0.00, -0.34, 2.28, 0.22),
+    (0.00, -0.52, 2.22, 0.17),
+    (0.00, -0.66, 2.17, 0.12),
+    (0.00, -0.44, 2.10, 0.14),   # mandibula
 
-    # Cuello
-    (0.00, 0.00, 1.48, 0.19),
-    (0.00, 0.04, 1.32, 0.22),
+    # Cuello largo en S: es lo que da porte de dragon en vez de muñeco
+    (0.00, 0.02, 2.14, 0.15),
+    (0.00, 0.12, 1.96, 0.15),
+    (0.00, 0.14, 1.78, 0.16),
+    (0.00, 0.08, 1.60, 0.17),
 
-    # Torso
-    (0.00, 0.00, 1.12, 0.34),
-    (0.00, -0.08, 0.86, 0.36),
-    (0.00, 0.04, 0.62, 0.30),
+    # Torso: mas estrecho arriba, pecho ancho, cintura
+    (0.00, 0.00, 1.42, 0.28),
+    (0.00, -0.08, 1.18, 0.32),   # pecho
+    (0.00, -0.06, 0.94, 0.30),
+    (0.00, 0.04, 0.70, 0.27),    # cintura
 
-    # Brazos: cortos y algo mas gruesos, o el torso se los traga
-    (0.38, -0.06, 1.06, 0.19),
-    (0.58, -0.16, 0.92, 0.16),
-    (0.72, -0.26, 0.80, 0.13),
-    (-0.38, -0.06, 1.06, 0.19),
-    (-0.58, -0.16, 0.92, 0.16),
-    (-0.72, -0.26, 0.80, 0.13),
+    # Brazos
+    (0.32, -0.10, 1.20, 0.14),
+    (0.50, -0.22, 1.04, 0.12),
+    (0.62, -0.32, 0.92, 0.10),
+    (-0.32, -0.10, 1.20, 0.14),
+    (-0.50, -0.22, 1.04, 0.12),
+    (-0.62, -0.32, 0.92, 0.10),
 
-    # Piernas
-    (0.30, 0.02, 0.48, 0.26),
-    (0.32, -0.02, 0.24, 0.22),
-    (0.34, -0.20, 0.08, 0.19),
-    (-0.30, 0.02, 0.48, 0.26),
-    (-0.32, -0.02, 0.24, 0.22),
-    (-0.34, -0.20, 0.08, 0.19),
+    # Piernas: muslo grueso, pierna que afina, pie plano
+    (0.28, 0.04, 0.54, 0.26),
+    (0.30, -0.02, 0.30, 0.20),
+    (0.32, -0.22, 0.09, 0.17),
+    (-0.28, 0.04, 0.54, 0.26),
+    (-0.30, -0.02, 0.30, 0.20),
+    (-0.32, -0.22, 0.09, 0.17),
 
-    # Cola: el paso debe ser MENOR que el radio, si no salen cuentas de collar
-    (0.00, 0.28, 0.58, 0.25),
-    (0.01, 0.42, 0.50, 0.23),
-    (0.02, 0.56, 0.43, 0.21),
-    (0.03, 0.70, 0.38, 0.19),
-    (0.04, 0.84, 0.35, 0.17),
-    (0.05, 0.98, 0.36, 0.16),
-    (0.06, 1.10, 0.41, 0.14),
-    (0.07, 1.21, 0.49, 0.12),
-    (0.08, 1.30, 0.60, 0.11),
-    (0.09, 1.37, 0.72, 0.09),
+    # Cola: el paso entre masas debe ser MENOR que el radio o salen cuentas
+    (0.00, 0.28, 0.62, 0.24),
+    (0.01, 0.44, 0.54, 0.22),
+    (0.02, 0.60, 0.47, 0.20),
+    (0.03, 0.76, 0.42, 0.18),
+    (0.04, 0.92, 0.40, 0.16),
+    (0.05, 1.06, 0.42, 0.14),
+    (0.06, 1.18, 0.50, 0.12),
+    (0.07, 1.28, 0.62, 0.10),
+    (0.08, 1.34, 0.76, 0.085),
 ]
 
-FLAME_ORIGIN = (0.09, 1.41, 0.84)
+FLAME_ORIGIN = (0.08, 1.38, 0.88)
 
 # --------------------------------------------------------------------------
 # Piezas puntiagudas: (base_xyz, alto, radio_base, rotacion_euler)
@@ -105,15 +106,16 @@ def spike_list():
 
     # Cuernos: dos, hacia atras y afuera
     for sx in (-1, 1):
-        spikes.append(((sx * 0.17, 0.06, 1.98), 0.42, 0.075,
-                       (math.radians(-38), 0.0, math.radians(sx * -22))))
+        spikes.append(((sx * 0.13, 0.06, 2.44), 0.44, 0.065,
+                       (math.radians(-42), 0.0, math.radians(sx * -20))))
 
     # Cresta dorsal: se deriva de las propias masas del lomo y la cola, con un
     # desplazamiento hacia fuera. Colocada a ojo quedaba dentro del cuerpo.
     spine = [
-        (0.00, 0.04, 1.32, 0.22),   # cuello
-        (0.00, 0.00, 1.12, 0.34),   # torso alto
-        (0.00, 0.04, 0.62, 0.30),   # cadera
+        (0.00, 0.14, 1.78, 0.16),   # cuello alto
+        (0.00, 0.08, 1.60, 0.17),   # cuello bajo
+        (0.00, 0.00, 1.42, 0.28),   # cruz
+        (0.00, 0.04, 0.70, 0.27),   # cadera
     ] + [b for b in BLOBS if b[1] >= 0.28]   # toda la cola
 
     for i, (x, y, z, radius) in enumerate(spine):
@@ -126,10 +128,92 @@ def spike_list():
     # Garras: tres por pie
     for sx in (-1, 1):
         for i, dx in enumerate((-0.11, 0.0, 0.11)):
-            spikes.append(((sx * 0.34 + dx, -0.34, 0.06), 0.13, 0.035,
+            spikes.append(((sx * 0.32 + dx, -0.36, 0.07), 0.14, 0.035,
                            (math.radians(-78), 0.0, 0.0)))
 
     return spikes
+
+
+# --------------------------------------------------------------------------
+# Alas: la pieza que mas cambia la silueta
+# --------------------------------------------------------------------------
+
+# Perfil del ala en su propio plano (u = envergadura, v = cuerda).
+# El borde de salida festoneado es lo que la hace leer como ala de dragon y no
+# como una hoja.
+WING_OUTLINE = [
+    (0.00, 0.00),    # hombro
+    (0.30, 0.62),    # codo
+    (0.70, 1.16),    # muñeca
+    (1.44, 1.04),    # dedo 1
+    (1.02, 0.58),    # valle
+    (1.30, 0.16),    # dedo 2
+    (0.88, -0.10),   # valle
+    (1.00, -0.56),   # dedo 3
+    (0.56, -0.44),   # valle
+    (0.22, -0.52),   # anclaje bajo
+]
+
+WING_ROOT = (0.24, 0.22, 1.42)   # donde nace, en el lomo
+WING_SWEEP = math.radians(34)    # cuanto se echa hacia atras
+WING_TILT = math.radians(14)     # cuanto se abre hacia arriba
+
+
+def wing_mesh(name, side):
+    """
+    Membrana plana. No hace falta darle grosor: como la vamos a muestrear
+    como puntos, una superficie de una cara ya reparte particulas.
+    """
+    mesh = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+
+    verts = []
+    for u, v in WING_OUTLINE:
+        # El perfil vive en X-Z; el barrido lo echa hacia atras en Y
+        x = side * u
+        y = u * math.sin(WING_SWEEP)
+        z = v + u * math.sin(WING_TILT)
+        verts.append(bm.verts.new((x, y, z)))
+
+    face = bm.faces.new(verts if side > 0 else list(reversed(verts)))
+    bmesh.ops.triangulate(bm, faces=[face])
+    bm.to_mesh(mesh)
+    bm.free()
+    return mesh
+
+
+def build_wings():
+    objects = []
+    for side in (-1, 1):
+        name = f"ala_{'d' if side > 0 else 'i'}"
+        obj = bpy.data.objects.new(name, wing_mesh(name, side))
+        obj.location = (side * WING_ROOT[0], WING_ROOT[1], WING_ROOT[2])
+        bpy.context.scene.collection.objects.link(obj)
+        objects.append(obj)
+
+        # Nervaduras: los huesos del ala, sobre el borde de ataque y los dedos
+        for i, (u, v) in enumerate(WING_OUTLINE[1:4], start=1):
+            prev = WING_OUTLINE[i - 1]
+            start = Vector((side * prev[0], prev[0] * math.sin(WING_SWEEP),
+                            prev[1] + prev[0] * math.sin(WING_TILT)))
+            end = Vector((side * u, u * math.sin(WING_SWEEP),
+                          v + u * math.sin(WING_TILT)))
+            direction = end - start
+            length = direction.length
+            if length < 1e-4:
+                continue
+
+            bone = bpy.data.objects.new(
+                f"{name}_hueso_{i}", cone_mesh(f"{name}_hueso_{i}", length, 0.035)
+            )
+            bone.location = (side * WING_ROOT[0] + start.x,
+                             WING_ROOT[1] + start.y,
+                             WING_ROOT[2] + start.z)
+            bone.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+            bpy.context.scene.collection.objects.link(bone)
+            objects.append(bone)
+
+    return objects
 
 
 # --------------------------------------------------------------------------
@@ -256,11 +340,11 @@ def write_binary(points):
 def build_all():
     wipe_scene()
     body = build_body()
-    spikes = build_spikes()
+    parts = build_spikes() + build_wings()
     bpy.context.view_layer.update()
 
     surfaces = [(evaluated_mesh(body), body.matrix_world)]
-    for obj in spikes:
+    for obj in parts:
         surfaces.append((evaluated_mesh(obj), obj.matrix_world))
 
     return sample_surface(surfaces, TARGET_POINTS)
