@@ -57,7 +57,8 @@ export const PROJECTS = [
             'Autopublicación: Publicación automática como post e historia en Instagram y Facebook.',
             'Almacenamiento: Gestión de assets con MinIO.'
         ],
-        image: '/devega.svg',
+        image: '/logo-devega.png',
+        logo: true,
         tags: ['IA Generativa', 'MinIO', 'Instagram API', 'Facebook API'],
         link: 'https://github.com/garcia-bj/dashboard-de-vega',
         github: '#'
@@ -73,7 +74,8 @@ export const PROJECTS = [
             'Formulario inteligente: Filtrado y priorización automática de leads.',
             'Asignación: Designación y notificación automática al asesor comercial correspondiente.'
         ],
-        image: '/genuino.svg',
+        image: '/logo-genuino.png',
+        logo: true,
         tags: ['n8n', 'CRM', 'Automatización', 'Embudos de Venta'],
         link: 'https://genuinoimportaciones.com/',
         github: '#'

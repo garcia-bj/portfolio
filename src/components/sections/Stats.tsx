@@ -5,11 +5,12 @@ import { animate, onScroll } from 'animejs';
 import { TextReveal } from '@/components/ui/TextReveal';
 import { Reveal } from '@/components/ui/Reveal';
 
+// La nota es lo que hace creible la cifra: un numero solo no dice nada
 const stats = [
-    { value: 3, suffix: '+', label: 'Años de experiencia' },
-    { value: 15, suffix: '+', label: 'Proyectos entregados' },
-    { value: 10, suffix: '+', label: 'Integraciones de IA' },
-    { value: 3, suffix: '', label: 'Canales multicanal' },
+    { value: 3, suffix: '+', label: 'Años construyendo', note: 'Web, IA y automatización' },
+    { value: 15, suffix: '+', label: 'Proyectos entregados', note: 'En producción, con usuarios' },
+    { value: 10, suffix: '+', label: 'Integraciones de IA', note: 'RAG, agentes y visión' },
+    { value: 3, suffix: '', label: 'Canales conectados', note: 'WhatsApp · Instagram · Messenger' },
 ];
 
 /**
@@ -63,7 +64,7 @@ export function Stats() {
             <div className="mx-auto max-w-7xl px-6 lg:px-10">
                 {/* Declaración que se ilumina palabra por palabra al hacer scroll */}
                 <TextReveal
-                    text="Construyo IA que atiende clientes reales: agentes que responden a cualquier hora, pipelines que no se caen y arquitecturas que aguantan crecer."
+                    text="Una IA no se mide en la demo. Se mide cuando un cliente escribe a las tres de la mañana y recibe una respuesta que resuelve."
                     className="mb-24 max-w-4xl font-display text-[clamp(1.75rem,4vw,3.25rem)] font-semibold leading-[1.15] text-foreground"
                 />
 
@@ -84,6 +85,9 @@ export function Stats() {
                             </div>
                             <p className="mt-4 font-mono text-[10px] uppercase leading-relaxed tracking-[0.2em] text-muted-foreground/70">
                                 {s.label}
+                            </p>
+                            <p className="mt-2 text-xs leading-relaxed text-muted-foreground/45">
+                                {s.note}
                             </p>
                         </div>
                     ))}

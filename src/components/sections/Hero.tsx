@@ -3,7 +3,8 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
-import { ArrowRight, Github, FileDown, Cpu, Terminal } from 'lucide-react';
+import { ArrowRight, FileDown, Cpu, Terminal } from 'lucide-react';
+import { SOCIALS } from './socials';
 import { Magnetic } from '@/components/ui/Magnetic';
 
 // --- Fondo: red neuronal en canvas ---
@@ -166,7 +167,7 @@ const Hero = () => {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
                             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
                         </span>
-                        <span className="eyebrow">Disponible para proyectos</span>
+                        <span className="eyebrow">Sistemas de IA en producción</span>
                     </motion.div>
 
                     <motion.h1
@@ -197,9 +198,9 @@ const Hero = () => {
                         transition={{ duration: 0.7, ease }}
                         className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground/85"
                     >
-                        Construyo <span className="text-foreground">agentes autónomos</span>, pipelines RAG y
-                        plataformas SaaS multitenant — con interfaces tan afiladas como la infraestructura que
-                        hay debajo.
+                        Construyo <span className="text-foreground">agentes de IA</span> que atienden clientes,
+                        buscadores que entienden tus documentos y plataformas SaaS que aguantan crecer.
+                        Del modelo al deploy.
                     </motion.p>
 
                     <motion.div
@@ -228,15 +229,20 @@ const Hero = () => {
                             </a>
                         </Magnetic>
 
-                        <a
-                            href="https://github.com/garcia-bj"
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="Perfil de GitHub"
-                            className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
-                        >
-                            <Github size={19} />
-                        </a>
+                        <div className="flex items-center gap-3">
+                            {SOCIALS.map(({ Icon, label, href }) => (
+                                <a
+                                    key={label}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    aria-label={label}
+                                    className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border text-muted-foreground transition-colors duration-200 hover:border-primary/50 hover:text-primary"
+                                >
+                                    <Icon size={19} />
+                                </a>
+                            ))}
+                        </div>
                     </motion.div>
                 </motion.div>
 

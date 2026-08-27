@@ -19,7 +19,12 @@ Personal portfolio site for Brandon Garcia (Full Stack Developer & AI Engineer).
 - Single-page site: `src/app/page.tsx` assembles section components from `src/components/sections/` (`Hero`, `Stats`, `Stack`, `Projects`, `Experience`, `Contact`), each wrapped in `<SectionReveal>`. Only route is `/`.
 - `src/app/layout.tsx` owns the chrome: `Navbar`, `Footer`, `ScrollProgressIndicator` and the GA scripts. Note `<html lang="en">` while all copy is Spanish.
 - Path alias `@/*` → `./src/*`.
-- Projects data lives in `src/components/sections/constants.ts`, not fetched or in a DB. Anchor ids come from the `SectionId` enum in `src/types/index.ts` (used by the Navbar links).
+- Projects data lives in `src/components/sections/constants.ts`, not fetched or in a DB.
+  Un proyecto con `logo: true` no pinta su imagen a sangre: la centra sobre una
+  placa blanca (`Projects.tsx`). Hace falta porque el logo de Genuino es negro y
+  desapareceria sobre el fondo oscuro.
+- Las redes salen de `src/components/sections/socials.ts`, unica fuente para
+  Hero, Contact y Footer. Anchor ids come from the `SectionId` enum in `src/types/index.ts` (used by the Navbar links).
 
 ## Animation layer (`src/components/ui/`)
 

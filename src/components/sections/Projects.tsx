@@ -34,6 +34,7 @@ function ProjectCard({
     progress: MotionValue<number>;
 }) {
     const isDesktop = useIsDesktop();
+    const isLogo = 'logo' in project && project.logo;
     // Cada tarjeta se encoge un poco cuando la siguiente se le monta encima
     const targetScale = 1 - (total - index) * 0.04;
     const scale = useTransform(progress, [index / total, 1], [1, isDesktop ? targetScale : 1]);
@@ -50,16 +51,34 @@ function ProjectCard({
                     <div className="grid md:grid-cols-2">
                     {/* Imagen */}
                     <div className={`relative min-h-[220px] overflow-hidden ${flip ? 'md:order-2' : ''}`}>
-                        <img
-                            src={project.image}
-                            alt={project.title}
-                            loading="lazy"
-                            className="absolute inset-0 h-full w-full object-cover"
-                        />
-                        <div
-                            className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent md:from-transparent md:via-card/10 md:to-card ${flip ? 'md:bg-gradient-to-l' : 'md:bg-gradient-to-r'
-                                }`}
-                        />
+                        {isLogo ? (
+                            /* Un logo de marca no se recorta a sangre: se presenta.
+                               Ademas el de Genuino es negro y desapareceria sobre
+                               el fondo oscuro, de ahi la placa clara. */
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/[0.07] to-secondary/[0.05] p-10">
+                                <div className="flex w-full max-w-[15rem] items-center justify-center rounded-2xl bg-white p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.9)]">
+                                    <img
+                                        src={project.image}
+                                        alt={project.title}
+                                        loading="lazy"
+                                        className="h-auto w-full object-contain"
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <img
+                                    src={project.image}
+                                    alt={project.title}
+                                    loading="lazy"
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                />
+                                <div
+                                    className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent md:from-transparent md:via-card/10 md:to-card ${flip ? 'md:bg-gradient-to-l' : 'md:bg-gradient-to-r'
+                                        }`}
+                                />
+                            </>
+                        )}
                         <span className="absolute left-6 top-6 font-display text-6xl font-extrabold leading-none text-foreground/15">
                             {String(index + 1).padStart(2, '0')}
                         </span>

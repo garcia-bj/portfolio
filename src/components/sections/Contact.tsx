@@ -1,9 +1,10 @@
 'use client';
 
-import { SiWhatsapp, SiGmail, SiGithub } from 'react-icons/si';
+import { SiWhatsapp, SiGmail } from 'react-icons/si';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Reveal } from '@/components/ui/Reveal';
+import { SOCIALS } from './socials';
 
 // Los canales SON la seccion, no el apendice de un formulario.
 // Se quito el form: era un POST nativo a Formspree sin campo `_next`, asi que
@@ -24,8 +25,6 @@ const channels = [
         href: 'mailto:garciacussi7@gmail.com',
     },
 ];
-
-const socials = [{ Icon: SiGithub, label: 'GitHub', href: 'https://github.com/garcia-bj' }];
 
 export function Contact() {
     return (
@@ -85,7 +84,7 @@ export function Contact() {
                         </a>
 
                         <div className="flex items-center gap-3">
-                            {socials.map(({ Icon, label, href }) => (
+                            {SOCIALS.map(({ Icon, label, href }) => (
                                 <a
                                     key={label}
                                     href={href}
