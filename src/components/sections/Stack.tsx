@@ -29,7 +29,6 @@ const techIcons: Record<string, string> = {
     "MongoDB": "/icons/mongodb-icon-dark.svg",
     "Redis": "/icons/redis.svg",
     "Docker": "/icons/docker.svg",
-    "Kubernetes": "/icons/kubernetes.svg",
     "GitHub Actions": "/icons/github_dark.svg",
     "Git": "/icons/git.svg",
     "Supabase": "/icons/supabase.svg",
@@ -148,7 +147,6 @@ const categories: Category[] = [
         color: "#FFD93D",
         techs: [
             { name: "Docker", level: 90 },
-            { name: "Kubernetes", level: 78 },
             { name: "GitHub Actions", level: 92 },
             { name: "Google Cloud", level: 80 },
             { name: "MinIO", level: 82 },
@@ -221,7 +219,7 @@ function TechIcon({ name, className }: { name: string; className: string }) {
 const marqueeTechs = [
     "React", "Next.js", "TypeScript", "Tailwind CSS", "Node.js", "Python",
     "FastAPI", "NestJS", "PostgreSQL", "MongoDB", "Redis", "Docker",
-    "Kubernetes", "Supabase", "Google Cloud", "OpenAI API", "Claude AI",
+    "Supabase", "Google Cloud", "OpenAI API", "Claude AI",
     "Claude Code", "OpenCode", "MCP", "Skills",
     "Qdrant", "n8n", "LangGraph", "LangChain",
     "Meta Cloud API", "WhatsApp Business API", "Instagram Graph API", "Messenger Platform",
