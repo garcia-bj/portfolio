@@ -3,6 +3,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { MotionValue } from 'framer-motion';
 
 /**
@@ -33,9 +36,18 @@ const SPECS: { kind: Kind; radius: number; height: number }[] = [
 ];
 
 /** Color de las capas apagadas: el trazo base del sitio. */
-const DIM = '#0C6B66';
-const DIM_OPACITY = 0.46;
+const DIM = '#1DA79E';
+const DIM_OPACITY = 0.75;
 const HOT_OPACITY = 1.0;
+/**
+ * Grosor del trazo en pixeles.
+ *
+ * OJO: `LineBasicMaterial.linewidth` **se ignora en WebGL** —siempre pinta a
+ * 1 px— por una limitacion de la especificacion. Para tener grosor de verdad
+ * hay que usar `LineSegments2`, que dibuja cada arista como dos triangulos.
+ */
+const LINE_WIDTH = 2.2;
+const LINE_WIDTH_HOT = 3.4;
 
 const GAP_ASSEMBLED = 0.06;
 const GAP_EXPLODED = 0.52;
@@ -98,9 +110,20 @@ function buildLayer(spec: (typeof SPECS)[number], color: string) {
         })
     );
 
-    const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(solid, EDGE_THRESHOLD),
-        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95 })
+    const edgeGeometry = new LineSegmentsGeometry().fromEdgesGeometry(
+        new THREE.EdgesGeometry(solid, EDGE_THRESHOLD)
+    );
+    const edges = new LineSegments2(
+        edgeGeometry,
+        new LineMaterial({
+            color: new THREE.Color(color).getHex(),
+            linewidth: LINE_WIDTH,
+            transparent: true,
+            opacity: DIM_OPACITY,
+            // Sin esto las lineas lejanas se ven igual de gruesas que las cercanas
+            worldUnits: false,
+            alphaToCoverage: true,
+        })
     );
 
     group.add(fill, edges);
@@ -115,14 +138,16 @@ export function StackModule3D({
 }: {
     progress: MotionValue<number>;
     colors: string[];
-    /** Desplazamiento lateral objetivo, de -1 (izquierda) a 1 (derecha) */
-    drift: number;
+    /**
+     * Desplazamiento lateral, de -1 (izquierda) a 1 (derecha). Es un
+     * MotionValue y no un numero: si dependiera de `active` solo cambiaria al
+     * saltar de etapa, y el cilindro daria un brinco en vez de viajar.
+     */
+    drift: MotionValue<number>;
     /** Capa encendida. Va bajando por la pila conforme avanza el scroll. */
     active: number;
 }) {
     const mountRef = useRef<HTMLDivElement>(null);
-    const driftRef = useRef(drift);
-    driftRef.current = drift;
     const activeRef = useRef(active);
     activeRef.current = active;
 
@@ -176,6 +201,11 @@ export function StackModule3D({
             renderer.setSize(w, h, false);
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
+            // LineMaterial necesita saber el tamano del lienzo para calcular
+            // el grosor en pixeles. Sin esto las lineas salen finisimas.
+            for (const layer of layers) {
+                (layer.edges.material as LineMaterial).resolution.set(w, h);
+            }
         };
         resize();
         const observer = new ResizeObserver(resize);
@@ -191,7 +221,7 @@ export function StackModule3D({
 
         let raf = 0;
         let last = performance.now();
-        let driftCurrent = driftRef.current;
+        let driftCurrent = drift.get();
 
         const tick = (now: number) => {
             raf = requestAnimationFrame(tick);
@@ -217,14 +247,17 @@ export function StackModule3D({
 
                 // Solo una capa encendida a la vez. Al cambiar de etapa el
                 // encendido baja por la pila y estrena color.
-                const material = layer.edges.material as THREE.LineBasicMaterial;
+                const material = layer.edges.material as LineMaterial;
                 const target = i === lit ? hot : dim;
                 material.color.lerp(target, k);
                 material.opacity += ((i === lit ? HOT_OPACITY : DIM_OPACITY) - material.opacity) * k;
+                material.linewidth += ((i === lit ? LINE_WIDTH_HOT : LINE_WIDTH) - material.linewidth) * k;
             }
 
             // Deriva lateral suavizada hacia el lado que toca
-            driftCurrent += (driftRef.current - driftCurrent) * Math.min(delta * 3.2, 1);
+            // El objetivo ya viene interpolado del scroll; este suavizado solo
+            // quita el nervio del ultimo tramo.
+            driftCurrent += (drift.get() - driftCurrent) * Math.min(delta * 6.5, 1);
             shell.position.x = driftCurrent * 2.7;
             shell.rotation.z = driftCurrent * -0.07;
 
@@ -247,7 +280,7 @@ export function StackModule3D({
         };
         // `colors` es estable (viene de una constante de modulo)
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [progress]);
+    }, [progress, drift]);
 
     return <div ref={mountRef} className="h-full w-full" aria-hidden />;
 }

@@ -138,6 +138,26 @@ El recorrido importa: con 48 px de viaje el texto entrante parecia aparecer ahi
 mismo. `TRAVEL_IN` lo sube a 190 px y la opacidad entra **despues** que el
 movimiento, asi se lee como que llega desde abajo y no como un fundido.
 
+### El grosor del trazo
+
+**`LineBasicMaterial.linewidth` se ignora en WebGL**: siempre pinta a 1 px, por
+una limitacion de la especificacion. Da igual el valor que le pongas.
+
+Para tener grosor de verdad hay que usar `LineSegments2` + `LineMaterial`
+(`three/examples/jsm/lines/`), que dibuja cada arista como dos triangulos.
+Requiere pasarle la **resolucion del lienzo** en cada `resize`, o las lineas
+salen finisimas.
+
+La capa encendida tambien engorda: `LINE_WIDTH` 2.2 -> `LINE_WIDTH_HOT` 3.4.
+
+### La deriva es continua, no por etapas
+
+`drift` es un **MotionValue**, no un numero. Si dependiera de `active` solo
+cambiaria al saltar de etapa y el cilindro daria un brinco. Se interpola desde
+el progreso con el mismo `smoothstep(FADE_START, 1, ...)` que el relevo de
+textos, asi que el objeto empieza a cruzar en el mismo instante en que el texto
+arranca su cambio y llega a la vez que el titular nuevo.
+
 ### La capa encendida
 
 `StackModule3D` recibe `active` y enciende **una sola capa**: la suya toma el

@@ -365,8 +365,8 @@ export function TechStack() {
 
     const current = categories[active];
     const next = categories[Math.min(active + 1, categories.length - 1)];
-    const drift = DRIFT[active % DRIFT.length];
-    const align: 'left' | 'right' = drift > 0 ? 'left' : 'right';
+    const driftStep = DRIFT[active % DRIFT.length];
+    const align: 'left' | 'right' = driftStep > 0 ? 'left' : 'right';
     const nextDrift = DRIFT[(active + 1) % DRIFT.length];
     const nextAlign: 'left' | 'right' = nextDrift > 0 ? 'left' : 'right';
 
@@ -374,6 +374,16 @@ export function TechStack() {
     // ya esta llegando, en vez de cambiar de golpe al saltar de indice.
     const raw = useTransform(scrollYProgress, (p) => p * categories.length);
     const frac = useTransform(raw, (v) => v - Math.floor(v));
+
+    // Deriva continua: el cilindro empieza a cruzar en el mismo instante en que
+    // el texto arranca su relevo, y llega a la vez que el titular nuevo.
+    const drift = useTransform(raw, (v) => {
+        const i = Math.floor(v);
+        const f = smoothstep(FADE_START, 1, v - i);
+        const from = DRIFT[i % DRIFT.length];
+        const to = DRIFT[(i + 1) % DRIFT.length];
+        return from + (to - from) * f;
+    });
 
     const outOpacity = useTransform(frac, (f) => 1 - smoothstep(FADE_START, 0.94, f));
     const outY = useTransform(frac, (f) => -smoothstep(FADE_START, 1, f) * TRAVEL_OUT);

@@ -54,10 +54,10 @@ function ProjectCard({
                             src={project.image}
                             alt={project.title}
                             loading="lazy"
-                            className="absolute inset-0 h-full w-full scale-105 object-cover opacity-70 grayscale transition-all duration-700 hover:scale-110 hover:opacity-100 hover:grayscale-0"
+                            className="absolute inset-0 h-full w-full object-cover"
                         />
                         <div
-                            className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent md:from-transparent md:to-card ${flip ? 'md:bg-gradient-to-l' : 'md:bg-gradient-to-r'
+                            className={`pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent md:from-transparent md:via-card/10 md:to-card ${flip ? 'md:bg-gradient-to-l' : 'md:bg-gradient-to-r'
                                 }`}
                         />
                         <span className="absolute left-6 top-6 font-display text-6xl font-extrabold leading-none text-foreground/15">
