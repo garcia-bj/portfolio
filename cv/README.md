@@ -21,4 +21,18 @@ Tres trampas que ya costaron:
 `--virtual-time-budget` es lo que hace esperar a que carguen Syne y Geist;
 sin el salen las fuentes de respaldo.
 
+## Los enlaces
+
+Los `<a>` sobreviven al render: Chrome los escribe como anotaciones `/Annots`
+del PDF, asi que se pulsan de verdad en pantalla. Para comprobarlo:
+
+    python -c "from pypdf import PdfReader; r=PdfReader('public/CV_Brandon Garcia.pdf'); print(sum(1 for p in r.pages for a in (p.get('/Annots') or []) if (a.get_object().get('/A') or {}).get('/URI')))"
+
+Deberian salir 10.
+
+**Nada de una flecha `↗` como senal de enlace**: Geist no trae el glifo U+2197
+y se imprime la caja vacia con el codigo dentro. Los enlaces del cuerpo se
+marcan con un subrayado fino en el color de acento, que no depende de la
+fuente. Los de la cabecera no llevan nada: ya son URLs.
+
 El PDF publicado vive en `public/CV_Brandon Garcia.pdf`.

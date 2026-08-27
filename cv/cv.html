@@ -36,7 +36,18 @@
     padding-bottom: 5px;
     line-height: 1.5;
   }
-  .top span { white-space: nowrap; }
+  .top span, .top a { white-space: nowrap; }
+  .top a { color: inherit; text-decoration: none; }
+
+  /* Enlaces del cuerpo: subrayado fino en el color de acento.
+     Nada de una flecha ↗: Geist no trae ese glifo y sale la caja vacia. */
+  a.ext {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 0.7px;
+    text-underline-offset: 2.5px;
+  }
   .sep { color: var(--rule); padding: 0 6px; }
 
   h1 {
@@ -151,8 +162,8 @@
 <body>
 
 <div class="top">
-  <span>+591 62423272</span><span class="sep">|</span><span>garciacussi7@gmail.com</span><span class="sep">|</span><span>Cochabamba, Bolivia</span><br>
-  <span>portafolio-personal-bj.netlify.app</span><span class="sep">|</span><span>linkedin.com/in/brandon-junior-garcia-cussi</span><span class="sep">|</span><span>github.com/garcia-bj</span>
+  <a href="https://wa.me/59162423272">+591 62423272</a><span class="sep">|</span><a href="mailto:garciacussi7@gmail.com">garciacussi7@gmail.com</a><span class="sep">|</span><span>Cochabamba, Bolivia</span><br>
+  <a href="https://portafolio-personal-bj.netlify.app">portafolio-personal-bj.netlify.app</a><span class="sep">|</span><a href="https://www.linkedin.com/in/brandon-junior-garcia-cussi">linkedin.com/in/brandon-junior-garcia-cussi</a><span class="sep">|</span><a href="https://github.com/garcia-bj">github.com/garcia-bj</a>
 </div>
 
 <h1>Brandon Jr. Garcia</h1>
@@ -172,7 +183,7 @@
 
 <div class="entry">
   <div class="entry-head">
-    <span class="entry-title">Founder &amp; AI Engineer <span class="entry-org">— ASC (Agent Service Client)</span></span>
+    <span class="entry-title">Founder &amp; AI Engineer <span class="entry-org">— <a class="ext" href="https://autosalescloser.com">ASC (Agent Service Client)</a></span></span>
     <span class="entry-date">Marzo 2025 – Actualidad</span>
   </div>
   <ul>
@@ -187,7 +198,7 @@
 
 <div class="entry">
   <div class="entry-head">
-    <span class="entry-title">Lead Full Stack Developer <span class="entry-org">— Carguita</span></span>
+    <span class="entry-title">Lead Full Stack Developer <span class="entry-org">— <a class="ext" href="https://carguita.com">Carguita</a></span></span>
     <span class="entry-date">Enero 2025 – Actualidad</span>
   </div>
   <ul>
@@ -214,7 +225,7 @@
 
 <div class="entry">
   <div class="entry-head">
-    <span class="entry-title">Ecosistema RAG Multimodal &amp; MCP</span>
+    <span class="entry-title"><a class="ext" href="https://github.com/garcia-bj/rag-ecosystem">Ecosistema RAG Multimodal &amp; MCP</a></span>
     <span class="entry-date">AI Engineer</span>
   </div>
   <div class="entry-note">Sistema capaz de procesar documentos técnicos, tablas y diagramas complejos mediante modelos de visión.</div>
@@ -226,7 +237,7 @@
 
 <div class="entry">
   <div class="entry-head">
-    <span class="entry-title">De-Vega Resto-Bar <span class="entry-org">— Menús con IA</span></span>
+    <span class="entry-title"><a class="ext" href="https://github.com/garcia-bj/dashboard-de-vega">De-Vega Resto-Bar</a> <span class="entry-org">— Menús con IA</span></span>
     <span class="entry-date">Full Stack &amp; AI Engineer</span>
   </div>
   <div class="entry-note">Aplicación web de creación y edición de imágenes con IA para generar menús personalizados de restaurante.</div>
@@ -239,7 +250,7 @@
 
 <div class="entry">
   <div class="entry-head">
-    <span class="entry-title">Genuino Importaciones <span class="entry-org">— Web y embudo de ventas</span></span>
+    <span class="entry-title"><a class="ext" href="https://genuinoimportaciones.com/">Genuino Importaciones</a> <span class="entry-org">— Web y embudo de ventas</span></span>
     <span class="entry-date">Full Stack &amp; Automation Engineer</span>
   </div>
   <div class="entry-note">Sitio web corporativo y formulario inteligente de embudos de venta con cualificación automática.</div>
